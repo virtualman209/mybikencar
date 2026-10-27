@@ -346,7 +346,7 @@ $('#btnSettings').innerHTML = IC.gear;
    Config: Seasons Avenue
    ========================================================= */
 /* App version – keep in sync with VERSION in sw.js */
-const APP_VERSION = '3';
+const APP_VERSION = '4';
 
 const VEH = {
   bike: { name: 'Xe máy', floors: ['M', '2', '3', '4'], zones: f => f === 'M' ? ['S1', 'S2', 'S3', 'S4', 'EV'] : ['S1', 'S2', 'S3', 'S4'] },
@@ -576,16 +576,7 @@ async function quickShot() {
   const files = await pick(false);
   const metas = await savePhotos(files, 'parking', null);
   if (!metas.length) return;
-  render();
-  const acts = [];
-  for (const t of ['bike', 'car']) {
-    const last = latest(t); if (!last) continue;
-    acts.push({ label: `Gắn vào ${VEH[t].name.toLowerCase()}`, color: `var(--${t})`, fn: async () => {
-      for (const m of metas) { m.ref = last.id; await DB.put('photos', m); last.photoIds.push(m.id); }
-      await DB.put('parkings', last); render(); toast(`Đã gắn ảnh vào vị trí ${VEH[t].name.toLowerCase()}`);
-    } });
-  }
-  toast('Đã lưu ảnh vào app (không vào Thư viện ảnh)', acts, acts.length ? 7000 : 2600);
+  render(); // saved silently – no notification
 }
 
 /* =========================================================

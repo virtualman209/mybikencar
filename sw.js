@@ -1,5 +1,5 @@
 // MyBike'nCar – offline cache. Bump VERSION when you change any file.
-const VERSION = 'mybikencar-v3';
+const VERSION = 'mybikencar-v4';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
