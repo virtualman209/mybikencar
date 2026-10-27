@@ -1,0 +1,972 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="MyBike'nCar">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#F6F3EE" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121110" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<title>MyBike'nCar</title>
+<style>
+:root{
+  --bg:#F6F3EE; --card:#FFFFFF; --ink:#151413; --muted:#7A736B; --line:#151413;
+  --soft:#ECE6DE; --soft2:#F1ECE5;
+  --bike:#EE4E17; --car:#DE1149;
+  --slab:#E58C7D; --slab-side:#C9705F; --slab-mid:#FFFFFF; --slab-mid-side:#DDD6CC;
+  --ok:#1E8A4C; --warn:#C7361B;
+  --r:18px;
+  --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
+  color-scheme:light dark;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#121110; --card:#1D1C1A; --ink:#F3EFE9; --muted:#9C958C; --line:#F3EFE9;
+    --soft:#2A2825; --soft2:#23211F;
+    --bike:#FF6B3D; --car:#FF4677;
+    --slab:#B9675A; --slab-side:#8E4C41; --slab-mid:#3A3733; --slab-mid-side:#2A2825;
+    --ok:#4CC27F; --warn:#FF6B4F;
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+html,body{margin:0;background:var(--bg);color:var(--ink)}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  font-size:16px;line-height:1.4;overscroll-behavior-y:none}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+input,textarea{font:inherit;color:inherit}
+svg{display:block}
+.hidden{display:none!important}
+
+/* ---------- HOME ---------- */
+.home{max-width:520px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;
+  padding:calc(var(--safe-t) + 14px) 16px calc(var(--safe-b) + 16px)}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{font-size:34px;font-weight:900;letter-spacing:-1.2px;margin:0;line-height:1.05}
+.brand span{color:var(--bike)} .brand i{font-style:normal;color:var(--car)}
+.icon-btn{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:var(--muted)}
+.icon-btn:active{background:var(--soft)}
+.install{margin-top:12px;background:var(--soft);border-radius:14px;padding:10px 12px 10px 14px;font-size:14px;display:flex;gap:10px;align-items:center}
+.install b{font-weight:700}
+.install .x{margin-left:auto;flex:none;width:28px;height:28px;display:grid;place-items:center;color:var(--muted)}
+
+.vehicles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.veh{display:flex;flex-direction:column;align-items:center;gap:8px}
+.ring{width:min(120px,32vw);aspect-ratio:1;border-radius:50%;border:5px solid var(--line);display:grid;place-items:center;
+  background:var(--card);transition:transform .12s ease,box-shadow .12s ease;box-shadow:0 3px 0 var(--line)}
+.ring svg{width:58%;height:auto}
+.veh:active .ring{transform:translateY(3px);box-shadow:0 0 0 var(--line)}
+.veh-l{font-weight:700;font-size:15px}
+.veh-s{font-size:12px;color:var(--muted);margin-top:-6px}
+
+.status{margin-top:16px;background:var(--card);border:2.5px solid var(--line);border-radius:var(--r);padding:6px 6px}
+.srow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 10px;border-radius:12px}
+.srow:active{background:var(--soft2)}
+.srow+.srow{border-top:1.5px dashed var(--soft)}
+.srow .when{font-size:13px;color:var(--muted)}
+.srow .what{font-size:19px;line-height:1.3;font-weight:500;letter-spacing:-.2px}
+.srow .what b{font-weight:700;color:var(--acc)}
+.srow .empty{font-size:16px;color:var(--muted)}
+.srow .grow{flex:1;min-width:0}
+.srow img,.srow .ph{width:52px;height:52px;border-radius:10px;object-fit:cover;flex:none;background:var(--soft)}
+
+.plan{position:relative;margin-top:18px;padding-bottom:30px}
+.plan svg{width:100%;height:auto;overflow:visible}
+.plan .seg{cursor:pointer}
+.plan .cap{position:absolute;left:4px;bottom:4px;font-size:13px;color:var(--muted)}
+.plan .cap b{color:var(--ink);font-weight:600}
+.cam{position:absolute;right:0;bottom:-6px;width:84px;height:84px;border-radius:50%;border:5px solid var(--line);background:var(--card);
+  display:grid;place-items:center;box-shadow:0 3px 0 var(--line);transition:transform .12s,box-shadow .12s}
+.cam:active{transform:translateY(3px);box-shadow:0 0 0 var(--line)}
+.cam svg{width:44px}
+
+.nav{margin-top:auto;padding-top:26px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.nav button{border:3px solid var(--line);background:var(--card);border-radius:10px;min-height:78px;padding:8px 6px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:14px;font-weight:600;line-height:1.15;text-align:center;
+  box-shadow:0 3px 0 var(--line);transition:transform .12s,box-shadow .12s}
+.nav button:active{transform:translateY(3px);box-shadow:0 0 0 var(--line)}
+.nav svg{width:24px;height:24px}
+.nav .badge{font-size:11px;font-weight:600;color:var(--muted)}
+
+/* ---------- PAGES ---------- */
+.page{position:fixed;inset:0;background:var(--bg);z-index:20;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  transform:translateX(100%);transition:transform .28s cubic-bezier(.2,.8,.2,1);visibility:hidden}
+.page.open{transform:none;visibility:visible}
+.page-h{position:sticky;top:0;z-index:2;background:var(--bg);display:flex;align-items:center;gap:4px;
+  padding:calc(var(--safe-t) + 8px) 8px 8px}
+.page-h h2{margin:0;font-size:20px;font-weight:800;letter-spacing:-.4px}
+.back{display:flex;align-items:center;gap:2px;height:40px;padding:0 10px 0 4px;border-radius:12px;color:var(--ink);font-weight:600}
+.back:active{background:var(--soft)}
+.page-b{max-width:520px;margin:0 auto;padding:4px 16px calc(var(--safe-b) + 32px)}
+
+.seg-ctl{display:flex;background:var(--soft);border-radius:12px;padding:3px;gap:3px;margin:4px 0 14px}
+.seg-ctl button{flex:1;height:36px;border-radius:9px;font-size:14px;font-weight:600;color:var(--muted)}
+.seg-ctl button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+
+.empty-state{text-align:center;color:var(--muted);padding:48px 16px;font-size:15px}
+.empty-state svg{width:48px;height:48px;margin:0 auto 10px;opacity:.5}
+
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.tile{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;background:var(--soft)}
+.tile img{width:100%;height:100%;object-fit:cover;display:block}
+.tile .tag{position:absolute;left:4px;bottom:4px;font-size:10.5px;font-weight:700;color:#fff;background:rgba(0,0,0,.55);padding:2px 6px;border-radius:6px}
+.tile .dot{position:absolute;right:6px;top:6px;width:10px;height:10px;border-radius:50%;border:2px solid #fff}
+.month{font-size:13px;font-weight:700;color:var(--muted);margin:16px 2px 8px;text-transform:uppercase;letter-spacing:.4px}
+.month:first-child{margin-top:4px}
+
+.list{display:flex;flex-direction:column;gap:8px}
+.hrow{display:flex;gap:12px;align-items:center;text-align:left;background:var(--card);border-radius:14px;padding:12px;width:100%}
+.hrow:active{background:var(--soft2)}
+.hico{width:42px;height:42px;border-radius:50%;flex:none;display:grid;place-items:center;color:#fff;background:var(--acc)}
+.hico svg{width:26px}
+.hmain{flex:1;min-width:0}
+.hmain b{display:block;font-weight:650;font-size:16px}
+.hmain small{display:block;color:var(--muted);font-size:13px}
+.hmain .note{font-size:13px;color:var(--ink);opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.now{display:inline-block;font-size:11px;font-weight:700;color:var(--acc);border:1.5px solid var(--acc);border-radius:6px;padding:0 5px;margin-left:6px;vertical-align:2px}
+.hrow img{width:48px;height:48px;border-radius:9px;object-fit:cover;flex:none}
+
+/* maintenance */
+.mcard{background:var(--card);border:2.5px solid var(--line);border-radius:var(--r);padding:16px}
+.mcard .k{font-size:13px;color:var(--muted);font-weight:600}
+.mcard .big{font-size:30px;font-weight:800;letter-spacing:-.6px;line-height:1.1;margin-top:2px;color:var(--acc)}
+.mcard .sub{font-size:15px;margin-top:4px}
+.mcard .next{margin-top:12px;padding-top:12px;border-top:1.5px dashed var(--soft);font-size:15px}
+.next .late{color:var(--warn);font-weight:700}
+.next .soon{color:var(--bike);font-weight:700}
+.next .fine{color:var(--ok);font-weight:700}
+.mrow{display:block;text-align:left;background:var(--card);border-radius:14px;padding:12px 14px;width:100%}
+.mrow:active{background:var(--soft2)}
+.mrow .l1{display:flex;justify-content:space-between;gap:8px;font-weight:650}
+.mrow .l1 span:last-child{color:var(--muted);font-weight:500;font-size:14px}
+.mrow .l2{font-size:14px;color:var(--muted);margin-top:2px}
+.mrow .l3{font-size:14px;margin-top:4px;white-space:pre-line;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.thumbs{display:flex;gap:6px;margin-top:8px}
+.thumbs img{width:44px;height:44px;border-radius:8px;object-fit:cover}
+.h3{font-size:15px;font-weight:800;margin:22px 2px 10px}
+
+/* ---------- BUTTONS / FORMS ---------- */
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:52px;border-radius:14px;font-weight:700;font-size:16px;
+  background:var(--soft);color:var(--ink)}
+.btn:active{filter:brightness(.94)}
+.btn.primary{background:var(--acc,var(--ink));color:#fff}
+.btn.danger{background:transparent;color:var(--warn)}
+.btn[disabled]{opacity:.35;pointer-events:none}
+.btn svg{width:20px;height:20px}
+.btn-row{display:flex;gap:8px}
+.btn-row .btn{flex:1}
+.mt{margin-top:14px}
+
+.lbl{font-size:13px;font-weight:700;color:var(--muted);margin:16px 2px 8px;text-transform:uppercase;letter-spacing:.3px}
+.lbl:first-child{margin-top:2px}
+.lbl .opt{text-transform:none;font-weight:500;letter-spacing:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-width:56px;height:46px;padding:0 14px;border-radius:12px;border:2px solid var(--soft);background:var(--card);font-weight:650;font-size:16px}
+.chip.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.chip.ev.on{background:var(--ok);border-color:var(--ok)}
+.field{width:100%;min-height:48px;border-radius:12px;border:2px solid var(--soft);background:var(--card);padding:11px 12px;font-size:16px;outline:none}
+.field:focus{border-color:var(--acc,var(--ink))}
+textarea.field{min-height:84px;resize:vertical}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.two .lbl{margin-top:12px}
+.photo-row{display:flex;flex-wrap:wrap;gap:8px}
+.pthumb{position:relative;width:72px;height:72px}
+.pthumb img{width:72px;height:72px;border-radius:10px;object-fit:cover;display:block}
+.pthumb .rm{position:absolute;right:-6px;top:-6px;width:24px;height:24px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center}
+.pthumb .rm svg{width:12px}
+.padd{width:72px;height:72px;border-radius:10px;border:2px dashed var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11px;font-weight:600;color:var(--muted)}
+.padd svg{width:24px}
+
+/* ---------- SHEET ---------- */
+.sheet-wrap{position:fixed;inset:0;z-index:50}
+.backdrop{position:absolute;inset:0;background:rgba(0,0,0,.42);opacity:0;transition:opacity .25s}
+.sheet{position:absolute;left:0;right:0;bottom:0;max-width:560px;margin:0 auto;background:var(--bg);border-radius:22px 22px 0 0;
+  max-height:92vh;max-height:92dvh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.sheet-wrap.open .backdrop{opacity:1}
+.sheet-wrap.open .sheet{transform:none}
+.sheet-h{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 6px}
+.sheet-h h2{margin:0;font-size:20px;font-weight:800;letter-spacing:-.3px;display:flex;align-items:center;gap:8px}
+.sheet-h h2 svg{width:30px;color:var(--acc)}
+.sheet-h .x{width:34px;height:34px;border-radius:50%;background:var(--soft);display:grid;place-items:center;color:var(--muted)}
+.sheet-h .x svg{width:14px}
+.sheet-b{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:6px 16px calc(var(--safe-b) + 18px)}
+
+.detail .when{color:var(--muted);font-size:14px}
+.detail .loc{font-size:22px;font-weight:600;line-height:1.3;margin-top:2px}
+.detail .loc b{color:var(--acc)}
+.detail .note{margin-top:8px;background:var(--card);border-radius:12px;padding:10px 12px;font-size:15px;white-space:pre-line}
+.detail .grid{margin-top:14px}
+
+.set-item{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:14px;padding:14px;width:100%;text-align:left;margin-bottom:8px}
+.set-item:active{background:var(--soft2)}
+.set-item svg{width:22px;flex:none;color:var(--muted)}
+.set-item small{display:block;color:var(--muted);font-size:13px}
+.help{font-size:14px;color:var(--muted);line-height:1.5}
+.help ol{padding-left:20px;margin:6px 0}
+
+/* ---------- VIEWER ---------- */
+.viewer{position:fixed;inset:0;z-index:80;background:#000;color:#fff;display:flex;flex-direction:column;opacity:0;transition:opacity .2s}
+.viewer.open{opacity:1}
+.v-top,.v-bot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px}
+.v-top{padding-top:calc(var(--safe-t) + 10px)}
+.v-bot{padding-bottom:calc(var(--safe-b) + 12px);flex-direction:column;align-items:stretch}
+.v-top button{font-weight:600;height:36px;padding:0 6px}
+.v-count{font-size:14px;opacity:.7}
+.v-stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;touch-action:pan-y pinch-zoom}
+.v-stage img{max-width:100%;max-height:100%;object-fit:contain}
+.v-meta{font-size:14px;opacity:.85;text-align:center}
+.v-acts{display:flex;gap:10px}
+.v-acts button{flex:1;height:46px;border-radius:12px;background:rgba(255,255,255,.14);font-weight:650;display:flex;align-items:center;justify-content:center;gap:8px}
+.v-acts button svg{width:18px}
+.v-acts .del{color:#FF7A6B}
+
+/* ---------- TOAST ---------- */
+.toast{position:fixed;left:12px;right:12px;bottom:calc(var(--safe-b) + 14px);z-index:120;max-width:496px;margin:0 auto;
+  background:var(--ink);color:var(--bg);border-radius:16px;padding:12px 14px;font-size:15px;font-weight:550;
+  box-shadow:0 8px 28px rgba(0,0,0,.25);transform:translateY(140%);transition:transform .28s cubic-bezier(.2,.8,.2,1)}
+.toast.show{transform:none}
+.toast .acts{display:flex;gap:8px;margin-top:10px}
+.toast .acts button{flex:1;height:40px;border-radius:10px;font-weight:700;color:#fff;font-size:14px}
+.busy{position:fixed;inset:0;z-index:110;display:grid;place-items:center;background:rgba(0,0,0,.25)}
+.busy div{background:var(--card);color:var(--ink);padding:14px 18px;border-radius:14px;font-weight:600}
+.btn.danger-fill{background:transparent;color:var(--warn);border:2px solid var(--warn)}
+.ask{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.45);display:grid;place-items:center;padding:24px;opacity:0;transition:opacity .18s}
+.ask.open{opacity:1}
+.ask-box{width:100%;max-width:340px;background:var(--card);border-radius:20px;padding:20px 18px 16px;transform:scale(.94);transition:transform .18s}
+.ask.open .ask-box{transform:none}
+.ask h3{margin:0 0 8px;font-size:19px;font-weight:800;letter-spacing:-.3px}
+.ask p{margin:0 0 18px;font-size:15px;color:var(--muted);white-space:pre-line}
+.ask-acts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ask-acts button{height:48px;border-radius:12px;font-weight:700;font-size:16px}
+.ask-acts .no{background:var(--soft)}
+.ask-acts .yes{background:var(--warn);color:#fff}
+</style>
+</head>
+<body>
+
+<main class="home" id="home">
+  <div class="top">
+    <h1 class="brand">My<span>Bike</span>'n<i>Car</i></h1>
+    <button class="icon-btn" id="btnSettings" aria-label="Cài đặt"></button>
+  </div>
+  <div class="install hidden" id="install"></div>
+
+  <div class="vehicles">
+    <button class="veh" id="btnBike" style="--acc:var(--bike)">
+      <span class="ring" data-icon="bike"></span>
+      <span class="veh-l">Xe máy</span><span class="veh-s">Bấm để lưu chỗ đỗ</span>
+    </button>
+    <button class="veh" id="btnCar" style="--acc:var(--car)">
+      <span class="ring" data-icon="car"></span>
+      <span class="veh-l">Ô tô</span><span class="veh-s">Bấm để lưu chỗ đỗ</span>
+    </button>
+  </div>
+
+  <section class="status" id="status"></section>
+
+  <section class="plan" id="plan"></section>
+
+  <nav class="nav">
+    <button id="navPhotos"><span data-icon="image"></span>Ảnh đã chụp<span class="badge" id="bPhotos"></span></button>
+    <button id="navHistory"><span data-icon="clock"></span>Lịch sử đỗ xe<span class="badge" id="bHistory"></span></button>
+    <button id="navMaint"><span data-icon="wrench"></span>Lịch bảo dưỡng xe<span class="badge" id="bMaint"></span></button>
+  </nav>
+</main>
+
+<section class="page" id="pagePhotos"></section>
+<section class="page" id="pageHistory"></section>
+<section class="page" id="pageMaint"></section>
+
+<input type="file" id="camIn" accept="image/*" capture="environment" hidden>
+<input type="file" id="libIn" accept="image/*" multiple hidden>
+<input type="file" id="bakIn" accept="application/json,.json" hidden>
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+/* =========================================================
+   Helpers
+   ========================================================= */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const h = html => { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; };
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const pad = n => String(n).padStart(2, '0');
+const fmtDate = d => { d = new Date(d); return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${String(d.getFullYear()).slice(2)}`; };
+const fmtTime = d => { d = new Date(d); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const isoDate = d => { d = new Date(d); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+const parseISO = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const day0 = d => { d = new Date(d); d.setHours(0, 0, 0, 0); return d; };
+const daysBetween = (a, b) => Math.round((day0(b) - day0(a)) / 86400000);
+const nf = n => Number(n).toLocaleString('vi-VN');
+function relDay(ts) {
+  const d = daysBetween(ts, Date.now());
+  if (d <= 0) return 'hôm nay';
+  if (d === 1) return 'hôm qua';
+  if (d < 31) return `${d} ngày trước`;
+  const m = Math.round(d / 30.4);
+  return m < 12 ? `${m} tháng trước` : `${(d / 365).toFixed(1).replace('.', ',')} năm trước`;
+}
+const MONTHS = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
+const monthKey = ts => { const d = new Date(ts); return `${MONTHS[d.getMonth()]}, ${d.getFullYear()}`; };
+
+/* =========================================================
+   Icons
+   ========================================================= */
+const IC = {
+  bike: `<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="31" r="8.5"/><circle cx="51" cy="31" r="8.5"/><path d="M13 31l8-10h20l4-9"/><path d="M45 12l6 19"/><path d="M40 9h8"/><path d="M17 21c2-6 6-8 12-8h9l3 8" fill="currentColor"/><path d="M27 21l4 10h11"/></svg>`,
+  car: `<svg viewBox="0 0 64 40" fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 29v-7.4c0-1.6 1.1-3 2.7-3.3L17 16.6l7.2-8.4c.8-.9 1.9-1.4 3.1-1.4h12.3c1.2 0 2.3.5 3.1 1.4l7.4 8.4 4.7 1.3c1.5.4 2.6 1.8 2.6 3.4V29"/><path d="M6 29h6.5M23.5 29h17M51.5 29H58"/><circle cx="18" cy="29.5" r="5.5"/><circle cx="46" cy="29.5" r="5.5"/></svg>`,
+  camera: `<svg viewBox="0 0 48 40" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"><path d="M5 12a3 3 0 0 1 3-3h7l3.5-5h11L33 9h7a3 3 0 0 1 3 3v21a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3z"/><circle cx="24" cy="21.5" r="7.5"/><circle cx="36.5" cy="15" r="1.6" fill="currentColor" stroke="none"/></svg>`,
+  image: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="9" cy="10" r="1.8"/><path d="m21 16-5-5-9 9"/></svg>`,
+  clock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>`,
+  wrench: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L3.5 17.3a1.8 1.8 0 0 0 2.5 2.5l5.8-5.8a4 4 0 0 0 5.2-5.4l-2.6 2.6-2.4-.5-.5-2.4z"/></svg>`,
+  gear: `<svg viewBox="0 0 24 24" width="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>`,
+  back: `<svg viewBox="0 0 24 24" width="26" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg>`,
+  x: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>`,
+  plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>`,
+  share: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>`,
+  trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>`,
+  download: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 19h14"/></svg>`,
+  upload: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 19h14"/></svg>`,
+  disk: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>`,
+  shareIOS: `<svg viewBox="0 0 24 24" width="18" style="display:inline;vertical-align:-3px" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5v10h14V11h-1"/></svg>`,
+};
+const icon = n => IC[n] || '';
+$$('[data-icon]').forEach(el => el.innerHTML = icon(el.dataset.icon));
+$('#btnSettings').innerHTML = IC.gear;
+
+/* =========================================================
+   Config: Seasons Avenue
+   ========================================================= */
+/* App version – keep in sync with VERSION in sw.js */
+const APP_VERSION = '3';
+
+const VEH = {
+  bike: { name: 'Xe máy', floors: ['M', '2', '3', '4'], zones: f => f === 'M' ? ['S1', 'S2', 'S3', 'S4', 'EV'] : ['S1', 'S2', 'S3', 'S4'] },
+  car:  { name: 'Ô tô', floors: ['1', '1 trên', 'M', '2 dưới', '2 trên', '3 dưới', '3 trên', '4 dưới', '4 trên'], zones: () => ['cuoi', 'giua', 'dau'] },
+};
+const ZLABEL = { EV: 'Khu xe điện', cuoi: 'Cuối tầng', giua: 'Giữa tầng', dau: 'Đầu tầng' };
+const zLabel = z => ZLABEL[z] || z;
+function locText(p) {
+  if (p.type === 'bike') return `tầng ${p.floor}, ${p.zone === 'EV' ? 'khu xe điện' : 'khu ' + p.zone}`;
+  return `tầng ${p.floor}, ${{ cuoi: 'phía cuối của tầng', giua: 'khu giữa tầng', dau: 'phía đầu của tầng' }[p.zone]}`;
+}
+
+/* =========================================================
+   Storage (IndexedDB – private to this app, never Photos)
+   ========================================================= */
+const DB = {
+  db: null,
+  open() {
+    return new Promise((res, rej) => {
+      const r = indexedDB.open('mybikencar', 1);
+      r.onupgradeneeded = () => { for (const s of ['parkings', 'maint', 'photos', 'blobs']) if (!r.result.objectStoreNames.contains(s)) r.result.createObjectStore(s, { keyPath: 'id' }); };
+      r.onsuccess = () => { this.db = r.result; res(); };
+      r.onerror = () => rej(r.error);
+    });
+  },
+  run(store, mode, fn) {
+    return new Promise((res, rej) => {
+      const t = this.db.transaction(store, mode); const req = fn(t.objectStore(store));
+      t.oncomplete = () => res(req ? req.result : undefined);
+      t.onerror = () => rej(t.error); t.onabort = () => rej(t.error);
+    });
+  },
+  all(s) { return this.run(s, 'readonly', st => st.getAll()); },
+  get(s, id) { return this.run(s, 'readonly', st => st.get(id)); },
+  put(s, o) { return this.run(s, 'readwrite', st => { st.put(o); }); },
+  del(s, id) { return this.run(s, 'readwrite', st => { st.delete(id); }); },
+};
+const S = { parkings: [], maint: [], photos: [] };
+async function loadAll() {
+  [S.parkings, S.maint, S.photos] = await Promise.all([DB.all('parkings'), DB.all('maint'), DB.all('photos')]);
+}
+const latest = type => S.parkings.filter(p => p.type === type).sort((a, b) => b.ts - a.ts)[0];
+
+/* ---------- photos ---------- */
+const urlCache = new Map();
+async function photoURL(id, v = 'thumb') {
+  const k = id + ':' + v;
+  if (urlCache.has(k)) return urlCache.get(k);
+  const b = await DB.get('blobs', id); if (!b) return '';
+  const u = URL.createObjectURL(new Blob([b[v] || b.full], { type: 'image/jpeg' }));
+  urlCache.set(k, u); return u;
+}
+function hydrate(root) {
+  $$('img[data-pid]', root).forEach(async img => { if (!img.getAttribute('src')) img.src = await photoURL(img.dataset.pid, img.dataset.v || 'thumb'); });
+}
+const imgTag = (id, v = 'thumb') => `<img data-pid="${id}" data-v="${v}" alt="">`;
+
+async function toJpeg(file, max, q) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = new Image(); img.src = url; await img.decode();
+    let w = img.naturalWidth, hh = img.naturalHeight; const s = Math.min(1, max / Math.max(w, hh));
+    w = Math.round(w * s); hh = Math.round(hh * s);
+    const c = document.createElement('canvas'); c.width = w; c.height = hh;
+    c.getContext('2d').drawImage(img, 0, 0, w, hh);
+    const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', q));
+    c.width = c.height = 0;
+    return await blob.arrayBuffer();
+  } finally { URL.revokeObjectURL(url); }
+}
+async function addPhoto(file, kind, ref) {
+  const id = uid();
+  const full = await toJpeg(file, 1800, .82);
+  const thumb = await toJpeg(file, 360, .72);
+  await DB.put('blobs', { id, full, thumb });
+  const meta = { id, ts: Date.now(), kind, ref: ref || null };
+  await DB.put('photos', meta); S.photos.push(meta);
+  return meta;
+}
+async function deletePhoto(id) {
+  await DB.del('blobs', id); await DB.del('photos', id);
+  S.photos = S.photos.filter(p => p.id !== id);
+  for (const [store, arr] of [['parkings', S.parkings], ['maint', S.maint]]) {
+    for (const r of arr) if (r.photoIds?.includes(id)) { r.photoIds = r.photoIds.filter(x => x !== id); await DB.put(store, r); }
+  }
+  for (const v of ['thumb', 'full']) { const k = id + ':' + v; if (urlCache.has(k)) { URL.revokeObjectURL(urlCache.get(k)); urlCache.delete(k); } }
+}
+
+/* ---------- camera / picker (must be called synchronously from a tap) ---------- */
+function pick(fromLibrary) {
+  const inp = fromLibrary ? $('#libIn') : $('#camIn');
+  return new Promise(res => {
+    inp.onchange = () => { const fs = [...inp.files]; inp.value = ''; res(fs); };
+    inp.click();
+  });
+}
+function busy(msg) { const el = h(`<div class="busy"><div>${esc(msg)}</div></div>`); document.body.append(el); return () => el.remove(); }
+async function savePhotos(files, kind, ref) {
+  if (!files.length) return [];
+  const done = busy('Đang lưu ảnh…'); const out = [];
+  try { for (const f of files) out.push(await addPhoto(f, kind, ref)); }
+  catch (e) { alert('Không lưu được ảnh: ' + e.message); }
+  finally { done(); }
+  return out;
+}
+
+/* =========================================================
+   UI primitives
+   ========================================================= */
+let toastTimer;
+function toast(msg, actions = [], ms = 2600) {
+  const t = $('#toast');
+  t.innerHTML = `<div>${esc(msg)}</div>` + (actions.length ? `<div class="acts">${actions.map((a, i) => `<button data-i="${i}" style="background:${a.color || 'var(--muted)'}">${esc(a.label)}</button>`).join('')}</div>` : '');
+  $$('button', t).forEach(b => b.onclick = () => { hide(); actions[+b.dataset.i].fn(); });
+  const hide = () => t.classList.remove('show');
+  clearTimeout(toastTimer); requestAnimationFrame(() => t.classList.add('show'));
+  toastTimer = setTimeout(hide, ms);
+}
+
+function openSheet({ title, body, acc, onCancel, titleIcon }) {
+  const wrap = h(`<div class="sheet-wrap"${acc ? ` style="--acc:var(--${acc})"` : ''}><div class="backdrop"></div>
+    <section class="sheet" role="dialog" aria-modal="true"><header class="sheet-h"><h2>${titleIcon ? icon(titleIcon) : ''}${esc(title)}</h2><button class="x" aria-label="Đóng">${IC.x}</button></header><div class="sheet-b"></div></section></div>`);
+  $('.sheet-b', wrap).append(body);
+  document.body.append(wrap);
+  requestAnimationFrame(() => requestAnimationFrame(() => wrap.classList.add('open')));
+  let closed = false;
+  const close = cancel => {
+    if (closed) return; closed = true;
+    if (cancel && onCancel) onCancel();
+    wrap.classList.remove('open'); setTimeout(() => wrap.remove(), 320);
+  };
+  $('.backdrop', wrap).onclick = () => close(true);
+  $('.x', wrap).onclick = () => close(true);
+  hydrate(wrap);
+  return { close: () => close(false), el: wrap };
+}
+
+function photoRow(container, getIds, onAdd, onRemove, labels = ['Chụp ảnh']) {
+  const render = () => {
+    container.innerHTML = getIds().map(id => `<div class="pthumb">${imgTag(id)}<button class="rm" data-id="${id}" aria-label="Xoá ảnh">${IC.x}</button></div>`).join('')
+      + `<button class="padd" data-lib="0">${IC.camera}${esc(labels[0])}</button>`
+      + (labels[1] ? `<button class="padd" data-lib="1">${IC.image}${esc(labels[1])}</button>` : '');
+    $$('.pthumb img', container).forEach((img, i) => img.onclick = () => viewer(getIds(), i));
+    $$('.rm', container).forEach(b => b.onclick = async () => { if (confirm('Xoá ảnh này?')) { await onRemove(b.dataset.id); render(); } });
+    $$('.padd', container).forEach(b => b.onclick = async () => { const files = await pick(b.dataset.lib === '1'); await onAdd(files); render(); });
+    hydrate(container);
+  };
+  render(); return render;
+}
+
+/* =========================================================
+   HOME
+   ========================================================= */
+function renderStatus() {
+  const el = $('#status');
+  el.innerHTML = ['bike', 'car'].map(t => {
+    const p = latest(t);
+    if (!p) return `<button class="srow" data-t="${t}" style="--acc:var(--${t})"><div class="grow"><div class="when">${VEH[t].name}</div><div class="empty">Chưa lưu vị trí đỗ</div></div></button>`;
+    const ph = p.photoIds?.[0];
+    return `<button class="srow" data-id="${p.id}" style="--acc:var(--${t})"><div class="grow">
+      <div class="when">ngày ${fmtDate(p.ts)} · ${fmtTime(p.ts)}</div>
+      <div class="what">${t === 'bike' ? 'xe máy' : 'ô tô'} đang để ở <b>${esc(locText(p))}</b></div></div>
+      ${ph ? imgTag(ph) : ''}</button>`;
+  }).join('');
+  $$('.srow', el).forEach(b => b.onclick = () => b.dataset.id ? parkDetail(S.parkings.find(p => p.id === b.dataset.id)) : parkSheet(b.dataset.t));
+  hydrate(el);
+}
+
+function renderPlan() {
+  const car = latest('car');
+  const hi = car?.zone;
+  // isometric slab: A -> B along the floor, W = width, D = thickness
+  const A = [18, 92], U = [292, -64], W = [-6, 26], D = [0, 12];
+  const P = (t, s = 0, d = 0) => [A[0] + t * U[0] + s * W[0] + d * D[0], A[1] + t * U[1] + s * W[1] + d * D[1]];
+  const pts = a => a.map(p => p.map(n => n.toFixed(1)).join(',')).join(' ');
+  const segs = [['cuoi', 0, .36, 'CUỐI TẦNG'], ['giua', .36, .63, 'GIỮA TẦNG'], ['dau', .63, 1, 'ĐẦU TẦNG']];
+  const ang = Math.atan2(U[1], U[0]) * 180 / Math.PI;
+  let svg = '';
+  for (const [z, t1, t2, label] of segs) {
+    const mid = z === 'giua';
+    const on = hi === z, dim = hi && !on;
+    const top = on ? 'var(--car)' : mid ? 'var(--slab-mid)' : 'var(--slab)';
+    const side = on ? 'color-mix(in srgb, var(--car) 70%, #000)' : mid ? 'var(--slab-mid-side)' : 'var(--slab-side)';
+    const c = P((t1 + t2) / 2, .5);
+    svg += `<g class="seg" data-z="${z}" opacity="${dim ? .5 : 1}">
+      <polygon points="${pts([P(t1, 1), P(t2, 1), P(t2, 1, 1), P(t1, 1, 1)])}" fill="${side}"/>
+      ${t1 === 0 ? `<polygon points="${pts([P(0, 0), P(0, 1), P(0, 1, 1), P(0, 0, 1)])}" fill="${side}"/>` : ''}
+      <polygon points="${pts([P(t1, 0), P(t2, 0), P(t2, 1), P(t1, 1)])}" fill="${top}"/>
+      <text x="${c[0]}" y="${c[1]}" transform="rotate(${ang.toFixed(1)} ${c[0]} ${c[1]})" text-anchor="middle" dominant-baseline="central"
+        font-size="11.5" font-weight="800" letter-spacing=".6" fill="${on ? '#fff' : mid ? 'var(--muted)' : 'var(--ink)'}">${label}</text></g>`;
+  }
+  // outlines (heavy like the sketch)
+  const ol = `<g fill="none" stroke="var(--line)" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round" pointer-events="none">
+      <polygon points="${pts([P(0, 0), P(1, 0), P(1, 1), P(0, 1)])}"/>
+      <polyline points="${pts([P(0, 0), P(0, 0, 1), P(0, 1, 1), P(1, 1, 1), P(1, 1)])}"/>
+      <line x1="${P(0, 1)[0]}" y1="${P(0, 1)[1]}" x2="${P(0, 1, 1)[0]}" y2="${P(0, 1, 1)[1]}"/>
+      ${[.36, .63].map(t => `<polyline points="${pts([P(t, 0), P(t, 1), P(t, 1, 1)])}" stroke-width="2.4"/>`).join('')}
+    </g>`;
+  let pin = '';
+  if (hi) {
+    const t = { cuoi: .18, giua: .495, dau: .815 }[hi]; const c = P(t, .5);
+    pin = `<g transform="translate(${c[0]} ${c[1] - 6})" pointer-events="none">
+      <path d="M0 0c-6-9-12-13-12-20a12 12 0 0 1 24 0c0 7-6 11-12 20z" fill="var(--car)" stroke="var(--line)" stroke-width="2.6" stroke-linejoin="round"/>
+      <circle cx="0" cy="-20" r="4.2" fill="#fff"/></g>`;
+  }
+  $('#plan').innerHTML = `<svg viewBox="0 0 320 136" role="img" aria-label="Sơ đồ tầng Seasons Avenue">${svg}${ol}${pin}</svg>
+    <div class="cap">Sơ đồ tầng <b>Seasons Avenue</b>${car ? `<br>Ô tô: ${esc(zLabel(car.zone).toLowerCase())}, tầng ${esc(car.floor)}` : ''}</div>
+    <button class="cam" id="btnCam" aria-label="Chụp ảnh vị trí">${IC.camera}</button>`;
+  $$('#plan .seg').forEach(g => g.onclick = () => parkSheet('car', null, g.dataset.z));
+  $('#btnCam').onclick = quickShot;
+}
+
+function renderBadges() {
+  const np = parkingPhotos().length;
+  $('#bPhotos').textContent = np ? `${np} ảnh` : '';
+  $('#bHistory').textContent = S.parkings.length ? `${S.parkings.length} lần` : '';
+  const last = [...S.maint].sort((a, b) => b.date.localeCompare(a.date))[0];
+  $('#bMaint').textContent = last ? `gần nhất ${fmtDate(parseISO(last.date))}` : '';
+}
+function render() {
+  renderStatus(); renderPlan(); renderBadges();
+  for (const [id, fn] of [['pagePhotos', renderPhotos], ['pageHistory', renderHistory], ['pageMaint', renderMaint]]) if ($('#' + id).classList.contains('open')) fn();
+}
+
+/* ---------- quick camera on home ---------- */
+async function quickShot() {
+  const files = await pick(false);
+  const metas = await savePhotos(files, 'parking', null);
+  if (!metas.length) return;
+  render();
+  const acts = [];
+  for (const t of ['bike', 'car']) {
+    const last = latest(t); if (!last) continue;
+    acts.push({ label: `Gắn vào ${VEH[t].name.toLowerCase()}`, color: `var(--${t})`, fn: async () => {
+      for (const m of metas) { m.ref = last.id; await DB.put('photos', m); last.photoIds.push(m.id); }
+      await DB.put('parkings', last); render(); toast(`Đã gắn ảnh vào vị trí ${VEH[t].name.toLowerCase()}`);
+    } });
+  }
+  toast('Đã lưu ảnh vào app (không vào Thư viện ảnh)', acts, acts.length ? 7000 : 2600);
+}
+
+/* =========================================================
+   Parking sheet
+   ========================================================= */
+function parkSheet(type, rec, presetZone) {
+  const v = VEH[type];
+  const st = rec ? { ...rec, photoIds: [...(rec.photoIds || [])] } : { id: uid(), type, floor: null, zone: presetZone || null, note: '', photoIds: [], ts: Date.now() };
+  const added = []; let saved = false;
+  const body = h(`<div>
+      <div class="lbl">Tầng</div><div class="chips floors"></div>
+      <div class="lbl">Khu</div><div class="chips zones"></div>
+      <div class="lbl">Ghi chú <span class="opt">(không bắt buộc)</span></div>
+      <input class="field note" placeholder="VD: gần cột B12, cạnh thang máy" autocomplete="off">
+      <div class="lbl">Ảnh vị trí <span class="opt">(lưu trong app)</span></div><div class="photo-row"></div>
+      <button class="btn primary save mt">Lưu vị trí</button></div>`);
+  $('.note', body).value = st.note || '';
+  const renderChips = () => {
+    $('.floors', body).innerHTML = v.floors.map(f => `<button class="chip${st.floor === f ? ' on' : ''}" data-f="${esc(f)}">${esc(f)}</button>`).join('');
+    const zones = v.zones(st.floor);
+    if (st.zone && st.floor && !zones.includes(st.zone)) st.zone = null;
+    $('.zones', body).innerHTML = zones.map(z => `<button class="chip${z === 'EV' ? ' ev' : ''}${st.zone === z ? ' on' : ''}" data-z="${z}">${esc(zLabel(z))}</button>`).join('');
+    $$('[data-f]', body).forEach(b => b.onclick = () => { st.floor = b.dataset.f; renderChips(); });
+    $$('[data-z]', body).forEach(b => b.onclick = () => { st.zone = b.dataset.z; renderChips(); });
+    $('.save', body).disabled = !(st.floor && st.zone);
+  };
+  renderChips();
+  photoRow($('.photo-row', body), () => st.photoIds,
+    async files => { for (const m of await savePhotos(files, 'parking', st.id)) { st.photoIds.push(m.id); added.push(m.id); } },
+    async id => { await deletePhoto(id); st.photoIds = st.photoIds.filter(x => x !== id); });
+  const sh = openSheet({ title: rec ? `Sửa vị trí ${v.name.toLowerCase()}` : `${v.name} đỗ ở đâu?`, titleIcon: type, acc: type, body,
+    onCancel: async () => { if (!saved) for (const id of added) await deletePhoto(id); render(); } });
+  $('.save', body).onclick = async () => {
+    st.note = $('.note', body).value.trim();
+    await DB.put('parkings', st); saved = true;
+    const i = S.parkings.findIndex(p => p.id === st.id); if (i >= 0) S.parkings[i] = st; else S.parkings.push(st);
+    sh.close(); render();
+    toast(rec ? 'Đã cập nhật' : `Đã lưu: ${v.name.toLowerCase()} ở ${locText(st)}`);
+  };
+}
+
+function parkDetail(p) {
+  const isNow = latest(p.type)?.id === p.id;
+  const body = h(`<div class="detail">
+    <div class="when">ngày ${fmtDate(p.ts)} · ${fmtTime(p.ts)} · ${relDay(p.ts)}</div>
+    <div class="loc">${p.type === 'bike' ? 'Xe máy' : 'Ô tô'} ${isNow ? 'đang để' : 'đã để'} ở <b>${esc(locText(p))}</b></div>
+    ${p.note ? `<div class="note">${esc(p.note)}</div>` : ''}
+    <div class="lbl">Ảnh vị trí</div><div class="photo-row"></div>
+    <div class="btn-row mt"><button class="btn edit">Sửa</button><button class="btn danger del">${IC.trash}Xoá</button></div></div>`);
+  photoRow($('.photo-row', body), () => p.photoIds,
+    async files => { for (const m of await savePhotos(files, 'parking', p.id)) p.photoIds.push(m.id); await DB.put('parkings', p); render(); },
+    async id => { await deletePhoto(id); render(); }, ['Chụp thêm']);
+  const sh = openSheet({ title: p.type === 'bike' ? 'Xe máy' : 'Ô tô', titleIcon: p.type, acc: p.type, body });
+  $('.edit', body).onclick = () => { sh.close(); setTimeout(() => parkSheet(p.type, p), 200); };
+  $('.del', body).onclick = async () => {
+    if (!confirm('Xoá lần đỗ xe này' + (p.photoIds.length ? ' và ảnh kèm theo' : '') + '?')) return;
+    for (const id of [...p.photoIds]) await deletePhoto(id);
+    await DB.del('parkings', p.id); S.parkings = S.parkings.filter(x => x.id !== p.id);
+    sh.close(); render(); toast('Đã xoá');
+  };
+}
+
+/* =========================================================
+   Pages
+   ========================================================= */
+const pageState = { photos: 'all', history: 'all', maint: 'bike' };
+function openPage(id, title, fn) {
+  const pg = $('#' + id);
+  pg.innerHTML = `<header class="page-h"><button class="back">${IC.back}Trang chủ</button></header>
+    <div class="page-b"><h2 style="font-size:28px;font-weight:900;letter-spacing:-.8px;margin:0 2px 10px">${esc(title)}</h2><div class="content"></div></div>`;
+  $('.back', pg).onclick = () => pg.classList.remove('open');
+  pg.classList.add('open'); pg.scrollTop = 0; fn();
+}
+function segCtl(opts, cur, onPick) {
+  const el = h(`<div class="seg-ctl">${opts.map(([k, l]) => `<button data-k="${k}" class="${k === cur ? 'on' : ''}">${esc(l)}</button>`).join('')}</div>`);
+  $$('button', el).forEach(b => b.onclick = () => onPick(b.dataset.k)); return el;
+}
+const emptyState = (ic, msg) => `<div class="empty-state">${icon(ic)}${esc(msg)}</div>`;
+
+/* ---------- Ảnh đã chụp ---------- */
+// "Ảnh đã chụp" only holds parking photos. Maintenance-receipt photos live only inside Lịch bảo dưỡng.
+const parkingPhotos = () => S.photos.filter(p => p.kind === 'parking');
+const photoVeh = p => S.parkings.find(r => r.id === p.ref)?.type || null;
+function renderPhotos() {
+  const c = $('#pagePhotos .content'); c.innerHTML = '';
+  const all = parkingPhotos();
+  if (!['all', 'bike', 'car'].includes(pageState.photos)) pageState.photos = 'all';
+  c.append(segCtl([['all', 'Tất cả'], ['bike', 'Xe máy'], ['car', 'Ô tô']], pageState.photos, k => { pageState.photos = k; renderPhotos(); }));
+  const list = all.filter(p => pageState.photos === 'all' || photoVeh(p) === pageState.photos).sort((a, b) => b.ts - a.ts);
+  if (!list.length) {
+    c.insertAdjacentHTML('beforeend', emptyState('image', all.length ? 'Không có ảnh nào trong mục này.' : 'Chưa có ảnh nào. Bấm nút máy ảnh ở trang chủ để chụp vị trí đỗ xe.'));
+  } else {
+    const ids = list.map(p => p.id); let html = '', mk = '';
+    list.forEach((p, i) => {
+      const k = monthKey(p.ts);
+      if (k !== mk) { html += (mk ? '</div>' : '') + `<div class="month">${k}</div><div class="grid">`; mk = k; }
+      const veh = photoVeh(p);
+      html += `<button class="tile" data-i="${i}">${imgTag(p.id)}<span class="tag">${fmtDate(p.ts)} ${fmtTime(p.ts)}</span>${veh ? `<span class="dot" style="background:var(--${veh})"></span>` : ''}</button>`;
+    });
+    c.insertAdjacentHTML('beforeend', html + '</div>');
+    $$('.tile', c).forEach(b => b.onclick = () => viewer(ids, +b.dataset.i));
+    hydrate(c);
+  }
+  if (all.length) {
+    const btn = h(`<button class="btn danger-fill clear mt">${IC.trash}Dọn sạch ảnh (${all.length})</button>`);
+    btn.onclick = clearParkingPhotos; c.append(btn);
+    c.insertAdjacentHTML('beforeend', `<div class="help" style="text-align:center;margin-top:8px">Ảnh phiếu bảo dưỡng nằm riêng trong Lịch bảo dưỡng xe và không bị xoá.</div>`);
+  }
+}
+
+async function clearParkingPhotos() {
+  const list = parkingPhotos();
+  if (!list.length) return;
+  const ok = await ask({
+    title: 'Xoá toàn bộ ảnh đã chụp?',
+    msg: `${list.length} ảnh vị trí đỗ xe sẽ bị xoá vĩnh viễn và không khôi phục được (trừ khi bạn có bản sao lưu).\n\nẢnh phiếu bảo dưỡng không bị ảnh hưởng.`,
+    yes: 'Có, xoá hết', no: 'Không',
+  });
+  if (!ok) return;
+  const done = busy('Đang xoá ảnh…');
+  try { for (const p of list) await deletePhoto(p.id); }
+  finally { done(); }
+  render(); toast(`Đã xoá ${list.length} ảnh`);
+}
+
+/* Yes / No confirmation dialog */
+function ask({ title, msg, yes = 'Có', no = 'Không' }) {
+  return new Promise(res => {
+    const el = h(`<div class="ask"><div class="ask-box" role="alertdialog" aria-modal="true">
+      <h3>${esc(title)}</h3><p>${esc(msg)}</p>
+      <div class="ask-acts"><button class="no">${esc(no)}</button><button class="yes">${esc(yes)}</button></div></div></div>`);
+    document.body.append(el); requestAnimationFrame(() => el.classList.add('open'));
+    const end = v => { el.classList.remove('open'); setTimeout(() => el.remove(), 200); res(v); };
+    $('.no', el).onclick = () => end(false);
+    $('.yes', el).onclick = () => end(true);
+    el.onclick = e => { if (e.target === el) end(false); };
+  });
+}
+
+/* ---------- Lịch sử đỗ xe ---------- */
+function renderHistory() {
+  const c = $('#pageHistory .content'); c.innerHTML = '';
+  c.append(segCtl([['all', 'Tất cả'], ['bike', 'Xe máy'], ['car', 'Ô tô']], pageState.history, k => { pageState.history = k; renderHistory(); }));
+  const list = S.parkings.filter(p => pageState.history === 'all' || p.type === pageState.history).sort((a, b) => b.ts - a.ts);
+  if (!list.length) { c.insertAdjacentHTML('beforeend', emptyState('clock', 'Chưa có lần đỗ xe nào.')); return; }
+  const cur = { bike: latest('bike')?.id, car: latest('car')?.id };
+  let html = '', mk = '';
+  for (const p of list) {
+    const k = monthKey(p.ts);
+    if (k !== mk) { html += (mk ? '</div>' : '') + `<div class="month">${k}</div><div class="list">`; mk = k; }
+    html += `<button class="hrow" data-id="${p.id}" style="--acc:var(--${p.type})"><span class="hico">${icon(p.type)}</span>
+      <span class="hmain"><b>${esc(locText(p))}${cur[p.type] === p.id ? '<span class="now">HIỆN TẠI</span>' : ''}</b>
+      <small>${p.type === 'bike' ? 'Xe máy' : 'Ô tô'} · ${fmtDate(p.ts)} ${fmtTime(p.ts)} · ${relDay(p.ts)}</small>
+      ${p.note ? `<span class="note">${esc(p.note)}</span>` : ''}</span>${p.photoIds?.[0] ? imgTag(p.photoIds[0]) : ''}</button>`;
+  }
+  c.insertAdjacentHTML('beforeend', html + '</div>');
+  $$('.hrow', c).forEach(b => b.onclick = () => parkDetail(S.parkings.find(p => p.id === b.dataset.id)));
+  hydrate(c);
+}
+
+/* ---------- Lịch bảo dưỡng ---------- */
+function renderMaint() {
+  const c = $('#pageMaint .content'); c.innerHTML = '';
+  const t = pageState.maint;
+  c.style.setProperty('--acc', `var(--${t})`);
+  c.append(segCtl([['bike', 'Xe máy'], ['car', 'Ô tô']], t, k => { pageState.maint = k; renderMaint(); }));
+  const list = S.maint.filter(m => m.type === t).sort((a, b) => b.date.localeCompare(a.date) || b.ts - a.ts);
+  const last = list[0];
+  let html = '';
+  if (last) {
+    const d = parseISO(last.date); const ago = daysBetween(d, Date.now());
+    const nextWithDate = list.find(m => m.next);
+    let next = '';
+    if (last.next) {
+      const left = daysBetween(Date.now(), parseISO(last.next));
+      const cls = left < 0 ? 'late' : left <= 14 ? 'soon' : 'fine';
+      const txt = left < 0 ? `quá hạn ${-left} ngày` : left === 0 ? 'hôm nay' : `còn ${left} ngày`;
+      next = `<div class="next">Lần tới: <b>${fmtDate(parseISO(last.next))}</b>${last.nextKm ? ` hoặc ${nf(last.nextKm)} km` : ''} · <span class="${cls}">${txt}</span></div>`;
+    } else if (last.nextKm) {
+      next = `<div class="next">Lần tới: khi đạt <b>${nf(last.nextKm)} km</b></div>`;
+    }
+    html += `<div class="mcard"><div class="k">LẦN BẢO DƯỠNG GẦN NHẤT</div>
+      <div class="big">${fmtDate(d)}</div>
+      <div class="sub">${ago <= 0 ? 'hôm nay' : relDay(d)}${last.km ? ` · ${nf(last.km)} km` : ''}${last.place ? ` · ${esc(last.place)}` : ''}</div>
+      ${next}</div>`;
+  } else {
+    html += `<div class="mcard"><div class="k">LẦN BẢO DƯỠNG GẦN NHẤT</div><div class="sub" style="color:var(--muted)">Chưa có dữ liệu ${t === 'bike' ? 'xe máy' : 'ô tô'}.</div></div>`;
+  }
+  html += `<button class="btn primary mt add">${IC.plus}Thêm lần bảo dưỡng</button>`;
+  if (list.length) {
+    html += `<div class="h3">Lịch sử bảo dưỡng</div><div class="list">` + list.map(m => `<button class="mrow" data-id="${m.id}">
+      <div class="l1"><span>${fmtDate(parseISO(m.date))}</span><span>${m.cost ? nf(m.cost) + ' đ' : ''}</span></div>
+      <div class="l2">${[m.km ? nf(m.km) + ' km' : '', esc(m.place)].filter(Boolean).join(' · ') || '&nbsp;'}</div>
+      ${m.content ? `<div class="l3">${esc(m.content)}</div>` : ''}
+      ${m.photoIds?.length ? `<div class="thumbs">${m.photoIds.slice(0, 5).map(id => imgTag(id)).join('')}</div>` : ''}</button>`).join('') + '</div>';
+  }
+  c.insertAdjacentHTML('beforeend', html);
+  $('.add', c).onclick = () => maintSheet(t);
+  $$('.mrow', c).forEach(b => b.onclick = () => maintSheet(t, S.maint.find(m => m.id === b.dataset.id)));
+  hydrate(c);
+}
+
+function maintSheet(type, rec) {
+  const st = rec ? { ...rec, photoIds: [...(rec.photoIds || [])] } : { id: uid(), type, date: isoDate(new Date()), km: '', place: '', content: '', cost: '', next: '', nextKm: '', photoIds: [], ts: Date.now() };
+  const added = []; let saved = false;
+  const body = h(`<div>
+    <div class="two"><div><div class="lbl">Ngày</div><input class="field" type="date" name="date"></div>
+      <div><div class="lbl">Số km (ODO)</div><input class="field" inputmode="numeric" name="km" placeholder="VD: 12500"></div></div>
+    <div class="lbl">Nơi bảo dưỡng</div><input class="field" name="place" placeholder="VD: Honda Head Trần Duy Hưng">
+    <div class="lbl">Nội dung</div><textarea class="field" name="content" placeholder="VD: thay dầu, lọc gió, kiểm tra phanh"></textarea>
+    <div class="lbl">Chi phí (đ)</div><input class="field" inputmode="numeric" name="cost" placeholder="VD: 350000">
+    <div class="two"><div><div class="lbl">Hẹn lần tới</div><input class="field" type="date" name="next"></div>
+      <div><div class="lbl">hoặc ở km</div><input class="field" inputmode="numeric" name="nextKm" placeholder="VD: 14500"></div></div>
+    <div class="lbl">Ảnh phiếu bảo dưỡng</div><div class="photo-row"></div>
+    <button class="btn primary save mt">Lưu</button>
+    ${rec ? `<button class="btn danger del">${IC.trash}Xoá lần bảo dưỡng này</button>` : ''}</div>`);
+  for (const k of ['date', 'km', 'place', 'content', 'cost', 'next', 'nextKm']) $(`[name=${k}]`, body).value = st[k] ?? '';
+  for (const k of ['km', 'cost', 'nextKm']) $(`[name=${k}]`, body).addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g, ''); });
+  photoRow($('.photo-row', body), () => st.photoIds,
+    async files => { for (const m of await savePhotos(files, 'receipt', st.id)) { st.photoIds.push(m.id); added.push(m.id); } },
+    async id => { await deletePhoto(id); st.photoIds = st.photoIds.filter(x => x !== id); },
+    ['Chụp phiếu', 'Chọn ảnh']);
+  const sh = openSheet({ title: rec ? 'Sửa bảo dưỡng' : `Bảo dưỡng ${type === 'bike' ? 'xe máy' : 'ô tô'}`, titleIcon: type, acc: type, body,
+    onCancel: async () => { if (!saved) for (const id of added) await deletePhoto(id); render(); } });
+  $('.save', body).onclick = async () => {
+    for (const k of ['date', 'place', 'content', 'next']) st[k] = $(`[name=${k}]`, body).value.trim();
+    for (const k of ['km', 'cost', 'nextKm']) { const v = $(`[name=${k}]`, body).value; st[k] = v ? Number(v) : ''; }
+    if (!st.date) { alert('Chọn ngày bảo dưỡng'); return; }
+    await DB.put('maint', st); saved = true;
+    const i = S.maint.findIndex(m => m.id === st.id); if (i >= 0) S.maint[i] = st; else S.maint.push(st);
+    sh.close(); render(); toast('Đã lưu lần bảo dưỡng');
+  };
+  if (rec) $('.del', body).onclick = async () => {
+    if (!confirm('Xoá lần bảo dưỡng này và ảnh phiếu kèm theo?')) return;
+    for (const id of [...st.photoIds]) await deletePhoto(id);
+    await DB.del('maint', st.id); S.maint = S.maint.filter(m => m.id !== st.id); saved = true;
+    sh.close(); render(); toast('Đã xoá');
+  };
+}
+
+/* =========================================================
+   Photo viewer
+   ========================================================= */
+function viewer(ids, start) {
+  ids = [...ids]; let i = start, curFile = null;
+  const el = h(`<div class="viewer"><div class="v-top"><button class="close">Đóng</button><span class="v-count"></span><span style="width:44px"></span></div>
+    <div class="v-stage"><img alt=""></div>
+    <div class="v-bot"><div class="v-meta"></div><div class="v-acts" style="margin-top:10px"><button class="share">${IC.share}Chia sẻ / Lưu</button><button class="del">${IC.trash}Xoá</button></div></div></div>`);
+  document.body.append(el); requestAnimationFrame(() => el.classList.add('open'));
+  const img = $('img', el);
+  const show = async () => {
+    const id = ids[i]; const meta = S.photos.find(p => p.id === id);
+    $('.v-count', el).textContent = ids.length > 1 ? `${i + 1} / ${ids.length}` : '';
+    img.src = await photoURL(id, 'full');
+    let label = meta?.kind === 'receipt' ? 'Phiếu bảo dưỡng' : 'Ảnh vị trí đỗ';
+    const pr = meta?.kind === 'parking' && S.parkings.find(r => r.id === meta.ref);
+    if (pr) label += ` · ${pr.type === 'bike' ? 'Xe máy' : 'Ô tô'} ${locText(pr)}`;
+    $('.v-meta', el).textContent = `${label} · ${meta ? fmtDate(meta.ts) + ' ' + fmtTime(meta.ts) : ''}`;
+    const b = await DB.get('blobs', id);
+    curFile = b ? new File([b.full], `MyBikenCar-${isoDate(meta?.ts || Date.now())}-${id.slice(-4)}.jpg`, { type: 'image/jpeg' }) : null;
+  };
+  const close = () => { el.classList.remove('open'); setTimeout(() => el.remove(), 220); };
+  $('.close', el).onclick = close;
+  $('.share', el).onclick = () => {
+    if (!curFile) return;
+    if (navigator.canShare && navigator.canShare({ files: [curFile] })) navigator.share({ files: [curFile] }).catch(() => {});
+    else { const a = document.createElement('a'); a.href = URL.createObjectURL(curFile); a.download = curFile.name; a.click(); }
+  };
+  $('.del', el).onclick = async () => {
+    if (!confirm('Xoá ảnh này khỏi app?')) return;
+    await deletePhoto(ids[i]); ids.splice(i, 1); render();
+    if (!ids.length) return close();
+    i = Math.min(i, ids.length - 1); show();
+  };
+  let x0 = null;
+  $('.v-stage', el).addEventListener('touchstart', e => { x0 = e.touches.length === 1 ? e.touches[0].clientX : null; }, { passive: true });
+  $('.v-stage', el).addEventListener('touchend', e => {
+    if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; x0 = null;
+    if (Math.abs(dx) > 50) { const n = i + (dx < 0 ? 1 : -1); if (n >= 0 && n < ids.length) { i = n; show(); } }
+  });
+  $('.v-stage', el).onclick = e => { if (ids.length < 2) return; const n = e.clientX > innerWidth / 2 ? i + 1 : i - 1; if (n >= 0 && n < ids.length) { i = n; show(); } };
+  show();
+}
+
+/* =========================================================
+   Settings: backup / restore / storage
+   ========================================================= */
+function b64(buf) { let s = ''; const a = new Uint8Array(buf); for (let i = 0; i < a.length; i += 0x8000) s += String.fromCharCode.apply(null, a.subarray(i, i + 0x8000)); return btoa(s); }
+function unb64(str) { const s = atob(str); const a = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a.buffer; }
+
+async function settings() {
+  let usage = '';
+  try { const e = await navigator.storage?.estimate?.(); if (e) usage = `Đang dùng khoảng ${(e.usage / 1048576).toFixed(1).replace('.', ',')} MB trên máy`; } catch {}
+  const body = h(`<div>
+    <button class="set-item mk">${IC.download}<span><b>Tạo bản sao lưu</b><small>Gồm vị trí đỗ, lịch bảo dưỡng và toàn bộ ảnh</small></span></button>
+    <button class="set-item imp">${IC.upload}<span><b>Khôi phục từ bản sao lưu</b><small>Chọn tệp .json đã lưu trước đó</small></span></button>
+    <div class="set-item" style="cursor:default">${IC.disk}<span><b>Dữ liệu</b><small>${S.parkings.length} lần đỗ · ${S.maint.length} lần bảo dưỡng<br>${parkingPhotos().length} ảnh đã chụp · ${S.photos.length - parkingPhotos().length} ảnh phiếu bảo dưỡng${usage ? '<br>' + usage : ''}</small></span></div>
+    <div class="help" style="margin-top:12px">Mọi dữ liệu và ảnh chỉ nằm trong app này trên iPhone của bạn, không lên mạng, không vào Thư viện ảnh. Nếu xoá app khỏi màn hình chính thì dữ liệu cũng mất, nên thỉnh thoảng hãy tạo bản sao lưu và lưu vào app Tệp (Files).</div>
+    <div class="help" style="margin-top:10px;text-align:center">MyBike'nCar · phiên bản ${APP_VERSION}</div>
+  </div>`);
+  const sh = openSheet({ title: 'Cài đặt', body });
+  const mk = $('.mk', body);
+  mk.onclick = async () => {
+    if (mk.file) { // second tap: share (needs to be a direct tap on iOS)
+      const f = mk.file;
+      if (navigator.canShare && navigator.canShare({ files: [f] })) navigator.share({ files: [f] }).catch(() => {});
+      else { const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = f.name; a.click(); }
+      return;
+    }
+    const done = busy('Đang tạo bản sao lưu…');
+    try {
+      const blobs = await DB.all('blobs');
+      const data = { app: 'mybikencar', v: 1, at: Date.now(), parkings: S.parkings, maint: S.maint, photos: S.photos,
+        blobs: blobs.map(b => ({ id: b.id, full: b64(b.full), thumb: b64(b.thumb) })) };
+      mk.file = new File([JSON.stringify(data)], `MyBikenCar-saoluu-${isoDate(new Date())}.json`, { type: 'application/json' });
+      mk.innerHTML = `${IC.share}<span><b>Lưu tệp sao lưu (${(mk.file.size / 1048576).toFixed(1).replace('.', ',')} MB)</b><small>Bấm rồi chọn “Lưu vào Tệp”</small></span>`;
+    } finally { done(); }
+  };
+  $('.imp', body).onclick = () => {
+    const inp = $('#bakIn');
+    inp.onchange = async () => {
+      const f = inp.files[0]; inp.value = ''; if (!f) return;
+      const done = busy('Đang khôi phục…');
+      try {
+        const d = JSON.parse(await f.text());
+        if (d.app !== 'mybikencar') throw new Error('Tệp không phải bản sao lưu MyBike\'nCar');
+        for (const b of d.blobs || []) await DB.put('blobs', { id: b.id, full: unb64(b.full), thumb: unb64(b.thumb) });
+        for (const s of ['photos', 'parkings', 'maint']) for (const o of d[s] || []) await DB.put(s, o);
+        await loadAll(); render(); sh.close(); toast('Đã khôi phục dữ liệu');
+      } catch (e) { alert('Không khôi phục được: ' + e.message); }
+      finally { done(); }
+    };
+    inp.click();
+  };
+}
+
+/* =========================================================
+   Install hint (iPhone Safari, not yet on Home Screen)
+   ========================================================= */
+function installHint() {
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+  let dismissed = false; try { dismissed = localStorage.getItem('hideInstall') === '1'; } catch {}
+  if (!ios || standalone || dismissed) return;
+  const el = $('#install');
+  el.innerHTML = `<span>Để dùng offline như app: bấm ${IC.shareIOS} <b>Chia sẻ</b> → <b>Thêm vào MH chính</b>.</span><button class="x" aria-label="Ẩn">${IC.x}</button>`;
+  el.classList.remove('hidden');
+  $('.x', el).firstElementChild.style.width = '12px';
+  $('.x', el).onclick = () => { el.classList.add('hidden'); try { localStorage.setItem('hideInstall', '1'); } catch {} };
+}
+
+/* =========================================================
+   Boot
+   ========================================================= */
+$('#btnBike').onclick = () => parkSheet('bike');
+$('#btnCar').onclick = () => parkSheet('car');
+$('#btnSettings').onclick = settings;
+$('#navPhotos').onclick = () => openPage('pagePhotos', 'Ảnh đã chụp', renderPhotos);
+$('#navHistory').onclick = () => openPage('pageHistory', 'Lịch sử đỗ xe', renderHistory);
+$('#navMaint').onclick = () => openPage('pageMaint', 'Lịch bảo dưỡng xe', renderMaint);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
+
+(async () => {
+  try { await DB.open(); await loadAll(); }
+  catch (e) { alert('Không mở được bộ nhớ của app: ' + e.message); }
+  render(); installHint();
+  try { navigator.storage?.persist?.(); } catch {}
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    // When a new version is published, the new service worker takes over and the app reloads itself once.
+    const hadController = !!navigator.serviceWorker.controller;
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadController || reloaded) return;
+      reloaded = true;
+      try { sessionStorage.setItem('justUpdated', '1'); } catch {}
+      location.reload();
+    });
+    navigator.serviceWorker.register('sw.js').then(r => r.update()).catch(() => {});
+  }
+  try { if (sessionStorage.getItem('justUpdated')) { sessionStorage.removeItem('justUpdated'); toast(`Đã cập nhật lên phiên bản ${APP_VERSION}`); } } catch {}
+})();
+</script>
+</body>
+</html>
