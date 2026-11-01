@@ -177,7 +177,7 @@ def vietqr_payload(bin_: str, account: str, amount: int, note: str) -> str:
     if amount:
         s += _tlv("54", str(int(amount)))
     s += _tlv("58", "VN")
-    note = no_accent(note)[:90]
+    note = re.sub(r"\s+", " ", re.sub(r"[^A-Za-z0-9 ]+", " ", no_accent(note))).strip()[:90]  # chỉ chữ, số, dấu cách
     if note:
         s += _tlv("62", _tlv("08", note))
     s += "6304"

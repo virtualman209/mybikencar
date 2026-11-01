@@ -395,7 +395,7 @@ $('#btnSettings .g').innerHTML = IC.gear;
    Config: Seasons Avenue
    ========================================================= */
 /* App version – keep in sync with VERSION in sw.js */
-const APP_VERSION = 'v1.6.0';
+const APP_VERSION = 'v1.6.1';
 
 const VEH = {
   bike: { name: 'Xe máy', floors: ['M', '2', '3', '4'], zones: f => f === 'M' ? ['S1', 'S2', 'S3', 'S4', 'EV'] : ['S1', 'S2', 'S3', 'S4'] },
@@ -767,14 +767,18 @@ function dueInfo(f) {
   if (left === 0) return { txt: 'hạn hôm nay', cls: 'late' };
   return { txt: `còn ${left} ngày`, cls: left <= 3 ? 'soon' : 'fine' };
 }
+// Nội dung chuyển khoản: chỉ chữ không dấu, số và dấu cách (ngân hàng hay lỗi với dấu và ký tự đặc biệt).
+const cleanNote = s => noAccent(s).replace(/[^A-Za-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
+const cleanPlate = s => noAccent(s).replace(/[^A-Za-z0-9]+/g, '').toUpperCase();
+const noteMissing = f => { const p = S.profile || {}; return !(p.apartment || '').trim() || !cleanPlate(f.vehicle === 'bike' ? p.plateBike : p.plateCar); };
 function transferNote(f) {
   const p = S.profile || {};
-  const apt = (p.apartment || '').trim(), plate = ((f.vehicle === 'bike' ? p.plateBike : p.plateCar) || '').trim();
+  const apt = (p.apartment || '').trim(), plate = cleanPlate((f.vehicle === 'bike' ? p.plateBike : p.plateCar) || '');
   const tpl = f.descTemplate || '[số căn hộ] đóng phí gửi xe tháng [...] cho xe [biển số]';
-  let t = tpl.replace(/\[\s*số căn hộ\s*\]/i, apt || '[số căn hộ]')
+  const t = tpl.replace(/\[\s*số căn hộ\s*\]/i, apt || 'so can ho')
     .replace(/\[\s*(?:…|\.\.\.|tháng)\s*\]/i, f.month || '')
-    .replace(/\[\s*biển số\s*\]/i, plate || '[biển số]');
-  return noAccent(t).replace(/\s+/g, ' ').trim();
+    .replace(/\[\s*biển số\s*\]/i, plate || 'bien so');
+  return cleanNote(t);
 }
 function renderFees() {
   const el = $('#fees'); if (!el) return;
@@ -803,7 +807,7 @@ async function setPaid(f, paid) {
 function paySheet(f) {
   if (!f) return;
   const note = transferNote(f);
-  const missing = /\[/.test(note);
+  const missing = noteMissing(f);
   const tcb = f.bankCode ? `https://dl.vietqr.io/pay?app=tcb&ba=${encodeURIComponent(f.accountNo + '@' + f.bankCode.toLowerCase())}&am=${f.amount}&tn=${encodeURIComponent(note)}&bn=${encodeURIComponent(noAccent(f.accountName))}` : '';
   const d = dueInfo(f);
   const body = h(`<div class="pay">
@@ -830,7 +834,7 @@ function paySheet(f) {
     <div class="help mt">Techcombank không cho app khác mở thẳng màn hình chuyển tiền, nên app dùng mã QR để Techcombank tự điền thông tin.</div>
   </div>`);
   const sh = openSheet({ title: `Phí gửi ${vehName(f.vehicle)}`, titleIcon: f.vehicle === 'bike' ? 'bike' : 'car', acc: f.vehicle === 'bike' ? 'bike' : 'car', body });
-  const cur = () => $('.note-in', body).value.trim();
+  const cur = () => cleanNote($('.note-in', body).value);
   const qrSrc = () => `api/fees/${encodeURIComponent(f.id)}/qr.png?tn=${encodeURIComponent(cur())}`;
   const qr = $('.qr', body);
   // Tải sẵn ảnh QR để khi bấm "Lưu" thì bảng chia sẻ mở ngay (iOS chặn chia sẻ nếu phải chờ mạng sau khi bấm).
@@ -841,7 +845,8 @@ function paySheet(f) {
     try { const r = await fetch(qrSrc()); if (r.ok) qrFile = new File([await r.blob()], `VietQR-${(f.month || 'phi').replace('/', '-')}.png`, { type: 'image/png' }); } catch {}
   };
   loadQr();
-  $('.note-in', body).addEventListener('change', loadQr);
+  // Ngài sửa tay thì khi rời ô cũng tự bỏ dấu và ký tự đặc biệt.
+  $('.note-in', body).addEventListener('change', () => { $('.note-in', body).value = cur(); loadQr(); });
   $$('.cp', body).forEach(b => b.onclick = () => {
     const c = b.dataset.c;
     copyText(c === 'acc' ? f.accountNo : c === 'amt' ? String(f.amount) : cur(), c === 'acc' ? 'số tài khoản' : c === 'amt' ? 'số tiền' : 'nội dung');

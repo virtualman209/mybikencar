@@ -19,6 +19,7 @@ iPhone giữ đủ dữ liệu trong IndexedDB. Mọi thay đổi vào `outbox`,
 Máy `192.168.50.231`, Tailscale `100.78.213.85`. DAS = `/srv/dev-disk-by-uuid-63bcf028-ccf8-4a65-a3f2-0510da8ead2c`. Thư mục app `DAS/VM_bikencar/{web,data,backup}`.
 
 ## Nhật ký phiên bản
+- **v1.6.1** (01/11/2026) – Nội dung chuyển khoản chỉ gồm chữ không dấu, số, dấu cách (`cleanNote` ở app, cùng luật trong `vietqr_payload` ở máy chủ). Biển số bỏ hết `-` `.` (30A-123.45 → 30A12345); tháng 11/2026 → 11 2026.
 - **v1.6.0** (01/11/2026) – Bỏ hẳn tính năng Phím tắt (lưu/xoá ảnh QR tự động) theo yêu cầu chủ nhà: quá rườm rà. Thanh toán quay về 2 bước: lưu mã QR vào Ảnh → mở Techcombank quét ảnh. Không làm lại tính năng này.
 - **v1.5.0** (01/11/2026) – Trả nhanh: gộp còn 1 Phím tắt `QR phi xe` (Tìm ảnh album `QR phi xe` → Nếu có → Xoá ảnh → Lấy nội dung của URL (đầu vào) → Lưu vào album → Mở Techcombank); nút "đã chuyển khoản" không gọi Phím tắt nữa. Viền/nét vẽ giao diện mỏng còn khoảng 1/2.
 - **v1.4.0** (01/11/2026) – Tự xoá ảnh QR: web app không xoá được ảnh trong Thư viện, nên dùng 2 Phím tắt iPhone do chủ nhà tự tạo: `QR phi xe` (nhận URL ảnh QR → lưu vào album `QR phi xe` → mở Techcombank) và `Xoa QR phi xe` (tìm ảnh trong album → xoá, iOS hỏi xác nhận). App gọi `shortcuts://run-shortcut`. Bật/tắt ở `prefs.profile.shortcuts`.
