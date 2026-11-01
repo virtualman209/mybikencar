@@ -32,7 +32,7 @@ Chấm nhỏ trên nút ⚙︎: xanh = đã đồng bộ, cam = có thay đổi 
 1. ⚙︎ → **Phí gửi xe** → **Thông tin căn hộ**: nhập số căn hộ, biển số (để điền nội dung chuyển khoản).
 2. **Email báo phí (Gmail)** – cách không cần mật khẩu (từ v1.2.0): trên máy tính mở `http://192.168.50.231:8096/gmail` và làm theo 7 bước (Google Apps Script, quyền chỉ xem email). Hoặc cách 2: Gmail + mật khẩu ứng dụng. Máy chủ kiểm tra 10 phút một lần, chỉ lấy email của người gửi có chữ "seasons".
 3. **Thông báo khi có phí mới**: bấm để bật (phải mở app từ màn hình chính).
-4. Có phí mới thì trang chủ hiện thẻ đỏ. Bấm vào → chép STK / nội dung, hoặc **Mở Techcombank**, hoặc lưu mã VietQR rồi quét trong Techcombank. Chuyển xong bấm **Tôi đã chuyển khoản xong**.
+4. Có phí mới thì trang chủ hiện thẻ đỏ. Bấm vào → **1 Lưu mã QR vào Ảnh** → **2 Mở Techcombank** → Quét QR → chọn ảnh mã vừa lưu (tự điền STK, số tiền, nội dung). Hoặc dùng các nút Chép. Chuyển xong bấm **Tôi đã chuyển khoản xong**.
 
 ## Lệnh SSH
 

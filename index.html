@@ -266,6 +266,12 @@ textarea.field{min-height:84px;resize:vertical}
 .copy-row .cp{background:var(--soft);border-radius:9px;height:34px;padding:0 12px}
 .warn-line{font-size:14px;color:var(--warn);margin-top:8px}
 .link{color:var(--acc,var(--ink));font-weight:700;text-decoration:underline}
+.paysteps{display:flex;flex-direction:column;gap:6px}
+.paysteps small{color:var(--muted);font-size:13.5px;line-height:1.4;padding:0 4px 6px}
+.paysteps .btn{justify-content:flex-start;padding:0 16px}
+.stepn{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.25);font-size:14px;margin-right:4px}
+.paysteps .tcb.next{animation:nudge 1.2s ease-in-out 3}
+@keyframes nudge{50%{transform:scale(1.03)}}
 .qr-wrap{margin-top:14px;display:flex;flex-direction:column;align-items:center;gap:6px}
 .qr-wrap img{width:min(240px,70vw);aspect-ratio:1;background:#fff;border-radius:14px;padding:6px}
 .qr-wrap small{color:var(--muted);font-size:12.5px;text-align:center}
@@ -389,7 +395,7 @@ $('#btnSettings .g').innerHTML = IC.gear;
    Config: Seasons Avenue
    ========================================================= */
 /* App version – keep in sync with VERSION in sw.js */
-const APP_VERSION = 'v1.3.0';
+const APP_VERSION = 'v1.3.1';
 
 const VEH = {
   bike: { name: 'Xe máy', floors: ['M', '2', '3', '4'], zones: f => f === 'M' ? ['S1', 'S2', 'S3', 'S4', 'EV'] : ['S1', 'S2', 'S3', 'S4'] },
@@ -812,33 +818,46 @@ function paySheet(f) {
     <textarea class="field note-in" rows="2">${esc(note)}</textarea>
     ${missing ? `<div class="warn-line">Chưa có số căn hộ / biển số. <button class="link prof">Nhập một lần</button> để app tự điền.</div>` : ''}
     <div class="btn-row mt"><button class="btn cp" data-c="note">Chép nội dung</button></div>
-    ${f.bin ? `<div class="qr-wrap"><img class="qr" alt="Mã VietQR"><small>Mã VietQR · Techcombank → Quét QR → chọn ảnh</small></div>` : ''}
-    ${tcb ? `<button class="btn primary mt tcb">Mở Techcombank</button>` : ''}
-    ${f.bin ? `<button class="btn mt saveqr">${IC.share}Lưu mã QR để quét</button>` : ''}
+    ${f.bin ? `<div class="lbl">Trả bằng Techcombank · 2 bước</div>
+    <div class="paysteps">
+      <button class="btn primary saveqr"><span class="stepn">1</span>Lưu mã QR vào Ảnh</button>
+      <small>Bảng chia sẻ hiện lên → chọn <b>Lưu hình ảnh</b>.</small>
+      <button class="btn primary tcb"><span class="stepn">2</span>Mở Techcombank</button>
+      <small>Trong Techcombank: <b>Quét QR</b> → biểu tượng <b>ảnh</b> → chọn mã vừa lưu. Số tài khoản, số tiền, nội dung tự điền sẵn, Ngài chỉ cần xác nhận. Trả xong có thể xoá ảnh mã QR.</small>
+    </div>
+    <div class="qr-wrap"><img class="qr" alt="Mã VietQR"><small>Mã VietQR (quét được bằng điện thoại khác)</small></div>` : ''}
     ${f.paidAt ? `<button class="btn danger mt unpaid">Bỏ đánh dấu đã trả</button>` : `<button class="btn mt paid" style="background:var(--ok);color:#fff">✓ Tôi đã chuyển khoản xong</button>`}
-    <div class="help mt">Techcombank không cho app ngoài tự trừ tiền, Ngài xác nhận chuyển khoản trong app Techcombank. Nếu nút "Mở Techcombank" không tự điền, dùng các nút Chép hoặc mã QR.</div>
+    <div class="help mt">Techcombank không cho app khác mở thẳng màn hình chuyển tiền, nên app dùng mã QR để Techcombank tự điền thông tin.</div>
   </div>`);
   const sh = openSheet({ title: `Phí gửi ${vehName(f.vehicle)}`, titleIcon: f.vehicle === 'bike' ? 'bike' : 'car', acc: f.vehicle === 'bike' ? 'bike' : 'car', body });
   const cur = () => $('.note-in', body).value.trim();
   const qrSrc = () => `api/fees/${encodeURIComponent(f.id)}/qr.png?tn=${encodeURIComponent(cur())}`;
-  const qr = $('.qr', body); if (qr) qr.src = qrSrc();
-  $('.note-in', body).addEventListener('change', () => { if (qr) qr.src = qrSrc(); });
+  const qr = $('.qr', body);
+  // Tải sẵn ảnh QR để khi bấm "Lưu" thì bảng chia sẻ mở ngay (iOS chặn chia sẻ nếu phải chờ mạng sau khi bấm).
+  let qrFile = null;
+  const loadQr = async () => {
+    if (!qr) return;
+    qr.src = qrSrc(); qrFile = null;
+    try { const r = await fetch(qrSrc()); if (r.ok) qrFile = new File([await r.blob()], `VietQR-${(f.month || 'phi').replace('/', '-')}.png`, { type: 'image/png' }); } catch {}
+  };
+  loadQr();
+  $('.note-in', body).addEventListener('change', loadQr);
   $$('.cp', body).forEach(b => b.onclick = () => {
     const c = b.dataset.c;
     copyText(c === 'acc' ? f.accountNo : c === 'amt' ? String(f.amount) : cur(), c === 'acc' ? 'số tài khoản' : c === 'amt' ? 'số tiền' : 'nội dung');
   });
   $('.prof', body)?.addEventListener('click', () => { sh.close(); setTimeout(() => profileSheet(() => paySheet(S.fees.find(x => x.id === f.id))), 250); });
   $('.tcb', body)?.addEventListener('click', () => {
-    copyText(cur(), 'nội dung');
     window.open(tcb.replace(/tn=[^&]*/, 'tn=' + encodeURIComponent(cur())), '_blank');
   });
   $('.saveqr', body)?.addEventListener('click', async () => {
+    if (!qrFile) { toast('Mã QR đang tải, thử lại sau 1 giây'); loadQr(); return; }
     try {
-      const r = await fetch(qrSrc()); if (!r.ok) throw 0;
-      const file = new File([await r.blob()], `VietQR-${f.month.replace('/', '-') || 'phi'}.png`, { type: 'image/png' });
-      if (navigator.canShare?.({ files: [file] })) await navigator.share({ files: [file] });
-      else { const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; a.click(); }
-    } catch (e) { if (e?.name !== 'AbortError') toast('Chưa tải được mã QR (cần kết nối OMV)'); }
+      if (navigator.canShare?.({ files: [qrFile] })) await navigator.share({ files: [qrFile] });
+      else { const a = document.createElement('a'); a.href = URL.createObjectURL(qrFile); a.download = qrFile.name; a.click(); }
+      $('.tcb', body)?.classList.add('next');
+      toast('Bấm bước 2 để mở Techcombank');
+    } catch (e) { if (e?.name !== 'AbortError') toast('Chưa lưu được mã QR'); }
   });
   $('.paid', body)?.addEventListener('click', async () => { await setPaid(f, true); sh.close(); toast('Đã đánh dấu đã thanh toán'); });
   $('.unpaid', body)?.addEventListener('click', async () => { await setPaid(f, false); sh.close(); });

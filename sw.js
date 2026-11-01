@@ -1,5 +1,5 @@
 // MyBike'nCar – offline cache. Bump VERSION whenever any app file changes (same as APP_VERSION in index.html).
-const VERSION = 'mybikencar-v1.3.0';
+const VERSION = 'mybikencar-v1.3.1';
 const PHOTO_CACHE = 'mybikencar-photos';  // photos from the OMV server; kept across versions
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 
