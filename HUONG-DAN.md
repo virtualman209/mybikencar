@@ -7,7 +7,7 @@ Dữ liệu (SQLite) và ảnh nằm trên DAS. App trên iPhone giữ một b�
 | Thư mục | `DAS/VM_bikencar/` gồm `web` (mã nguồn), `data` (`mybikencar.db` + `photos/`), `backup` (DB mỗi ngày, giữ 30 bản) |
 | Container | `vm_bikencar` (compose `vm-bikencar`) |
 | Cổng | `8096` http (trong nhà) · `8446` https qua Tailscale (để cài lên iPhone) |
-| Cập nhật | Nút **Cập nhật ngay** trong ⚙︎ Cài đặt của app, hoặc lệnh SSH bên dưới |
+| Cập nhật | Tự động 5 phút một lần; hoặc nút **Cập nhật ngay** trong ⚙︎ Cài đặt; hoặc lệnh SSH bên dưới |
 
 ## Cài lần đầu (SSH vào OMV bằng root, dán cả khối)
 

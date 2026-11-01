@@ -9,7 +9,7 @@ Chủ nhà nói tiếng Việt, không phải lập trình viên. Trả lời ti
 - `server/feemail.py` – đọc Gmail qua IMAP (chỉ đọc, `BODY.PEEK`), nhận diện email báo phí của BQL Seasons Avenue (`parse_fee`), tạo chuỗi VietQR (`vietqr_payload`). Cấu hình Gmail ở `data/mail.json` (quyền 600, KHÔNG lên GitHub, không có trong bản sao lưu). Thông báo đẩy: khóa VAPID `data/vapid_private.pem`, danh sách iPhone `data/push.json`.
 - `server/gmail.html` – trang hướng dẫn `/gmail` cài Apps Script (chép mã có khóa bí mật, dán URL /exec).
 - `server/update.sh` – git pull + `docker compose up -d --build`, chờ healthy, lỗi thì quay về bản cũ (`.bad_commit`). Ghi trạng thái `data/requests/update.status`.
-- `server/install.sh` – cài lần đầu: thư mục, systemd `vmbikencar-update.path` (nghe `data/requests/update.req`), container, `tailscale serve --https=8446 8096`.
+- `server/install.sh` – cài lần đầu (chạy lại thoải mái): thư mục, systemd `vmbikencar-update.path` (nghe `data/requests/update.req`), `vmbikencar-autoupdate.timer` (5 phút), container, `tailscale serve --https=8446 8096`.
 - `docker-compose.yml` – container `vm_bikencar`, cổng 8096, gắn `../data`, `../backup`.
 
 ## Đồng bộ
@@ -19,6 +19,7 @@ iPhone giữ đủ dữ liệu trong IndexedDB. Mọi thay đổi vào `outbox`,
 Máy `192.168.50.231`, Tailscale `100.78.213.85`. DAS = `/srv/dev-disk-by-uuid-63bcf028-ccf8-4a65-a3f2-0510da8ead2c`. Thư mục app `DAS/VM_bikencar/{web,data,backup}`.
 
 ## Nhật ký phiên bản
+- **v1.3.0** (01/11/2026) – Tự cập nhật: systemd `vmbikencar-autoupdate.timer` chạy `update.sh --auto` 5 phút/lần (im lặng khi không có gì mới, bỏ qua bản lỗi trong `.bad_commit`). Bản sao tạm của update.sh dùng `mktemp` để 2 lần chạy không giẫm nhau.
 - **v1.2.0** (01/11/2026) – Kết nối Gmail không cần mật khẩu: Google Apps Script (`feemail.SCRIPT_CODE`, quyền `gmail.readonly`, web app /exec + khóa bí mật `scriptKey` trong `data/mail.json`), trang hướng dẫn `/gmail`. Mật khẩu ứng dụng vẫn dùng được (cách 2).
 - **v1.1.0** (01/11/2026) – Phí gửi xe: máy chủ đọc Gmail 10 phút/lần, nhận email báo phí, thẻ phí trên trang chủ, trang thanh toán (chép STK/số tiền/nội dung, mã VietQR, nút mở Techcombank qua dl.vietqr.io – chưa xác nhận Techcombank hỗ trợ), đánh dấu đã trả, thông báo đẩy khi có phí mới.
 - **v1.0.0** (01/11/2026) – Chạy trên OMV: máy chủ FastAPI + SQLite, đồng bộ offline-first, nút Cập nhật ngay trong Cài đặt, sao lưu/khôi phục qua máy chủ.

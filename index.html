@@ -389,7 +389,7 @@ $('#btnSettings .g').innerHTML = IC.gear;
    Config: Seasons Avenue
    ========================================================= */
 /* App version – keep in sync with VERSION in sw.js */
-const APP_VERSION = 'v1.2.0';
+const APP_VERSION = 'v1.3.0';
 
 const VEH = {
   bike: { name: 'Xe máy', floors: ['M', '2', '3', '4'], zones: f => f === 'M' ? ['S1', 'S2', 'S3', 'S4', 'EV'] : ['S1', 'S2', 'S3', 'S4'] },
@@ -1309,7 +1309,7 @@ async function settings() {
       else if (u.current !== APP_VERSION) txt.innerHTML = `Máy chủ đã có <b>${esc(u.current)}</b>, mở lại app để dùng`;
       else if (u.latest && u.latest !== u.current) txt.innerHTML = `Có bản mới <b style="color:var(--ok)">${esc(u.latest)}</b> trên GitHub`;
       else if (last?.state === 'failed') txt.innerHTML = `<span style="color:var(--warn)">${esc(last.msg)}</span>`;
-      else txt.textContent = u.latest ? 'Đang ở bản mới nhất' : 'Bấm để kiểm tra và cập nhật từ GitHub';
+      else txt.textContent = (u.latest ? 'Đang ở bản mới nhất' : 'Bấm để kiểm tra và cập nhật từ GitHub') + ' · máy chủ tự kiểm tra 5 phút/lần';
     };
     const getUpd = async () => { const r = await Sync.fetch('api/update', {}, 10000); return r.json(); };
     getUpd().then(showUpd).catch(() => { txt.textContent = 'Chưa kết nối được OMV'; });

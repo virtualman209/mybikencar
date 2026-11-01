@@ -36,8 +36,31 @@ Unit=vmbikencar-update.service
 [Install]
 WantedBy=multi-user.target
 EOF
+echo "==> Cài tự cập nhật: kiểm tra GitHub 5 phút một lần"
+cat > /etc/systemd/system/vmbikencar-autoupdate.service <<UNIT
+[Unit]
+Description=MyBike'nCar: tự kiểm tra bản mới trên GitHub
+After=docker.service network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=$WEB/server/update.sh --auto
+UNIT
+cat > /etc/systemd/system/vmbikencar-autoupdate.timer <<UNIT
+[Unit]
+Description=MyBike'nCar: tự cập nhật 5 phút một lần
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=5min
+Unit=vmbikencar-autoupdate.service
+
+[Install]
+WantedBy=timers.target
+UNIT
 systemctl daemon-reload
 systemctl enable --now vmbikencar-update.path >/dev/null
+systemctl enable --now vmbikencar-autoupdate.timer >/dev/null
 
 echo "==> Dựng container vm_bikencar (lần đầu mất khoảng 1-2 phút)"
 cd "$WEB"
@@ -63,6 +86,7 @@ echo
 echo "================ XONG ================"
 [ -n "$TS_URL" ] && echo "Mở trên iPhone (Safari, bật Tailscale):  $TS_URL"
 echo "Xem nhanh trong nhà (không chạy offline): http://$IP:$HTTP_PORT"
+echo "Tự cập nhật:        5 phút một lần (xem: systemctl list-timers 'vmbikencar*')"
 echo "Cập nhật bằng SSH:  $WEB/server/update.sh"
 echo "Nhật ký cập nhật:   $WEB/update.log"
 echo "======================================"
