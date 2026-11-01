@@ -266,6 +266,10 @@ textarea.field{min-height:84px;resize:vertical}
 .copy-row .cp{background:var(--soft);border-radius:9px;height:34px;padding:0 12px}
 .warn-line{font-size:14px;color:var(--warn);margin-top:8px}
 .link{color:var(--acc,var(--ink));font-weight:700;text-decoration:underline}
+.sc-steps{margin:0;padding-left:22px;font-size:15px;line-height:1.5}
+.sc-steps li{margin-bottom:6px}
+.sc b.k,.paysteps b.k{background:var(--soft);border-radius:6px;padding:0 6px}
+.sc .link{font-size:14px}
 .paysteps{display:flex;flex-direction:column;gap:6px}
 .paysteps small{color:var(--muted);font-size:13.5px;line-height:1.4;padding:0 4px 6px}
 .paysteps .btn{justify-content:flex-start;padding:0 16px}
@@ -395,7 +399,7 @@ $('#btnSettings .g').innerHTML = IC.gear;
    Config: Seasons Avenue
    ========================================================= */
 /* App version – keep in sync with VERSION in sw.js */
-const APP_VERSION = 'v1.3.1';
+const APP_VERSION = 'v1.4.0';
 
 const VEH = {
   bike: { name: 'Xe máy', floors: ['M', '2', '3', '4'], zones: f => f === 'M' ? ['S1', 'S2', 'S3', 'S4', 'EV'] : ['S1', 'S2', 'S3', 'S4'] },
@@ -818,15 +822,21 @@ function paySheet(f) {
     <textarea class="field note-in" rows="2">${esc(note)}</textarea>
     ${missing ? `<div class="warn-line">Chưa có số căn hộ / biển số. <button class="link prof">Nhập một lần</button> để app tự điền.</div>` : ''}
     <div class="btn-row mt"><button class="btn cp" data-c="note">Chép nội dung</button></div>
-    ${f.bin ? `<div class="lbl">Trả bằng Techcombank · 2 bước</div>
+    ${f.bin && useShortcuts() ? `<div class="lbl">Trả bằng Techcombank</div>
+    <div class="paysteps">
+      <button class="btn primary sc-pay" style="justify-content:center">Lưu QR &amp; mở Techcombank</button>
+      <small>Phím tắt lưu mã vào album <b>${SC_ALBUM}</b> rồi mở Techcombank. Trong Techcombank: <b>Quét QR</b> → biểu tượng <b>ảnh</b> → chọn mã vừa lưu → xác nhận. Quay lại đây bấm nút xanh, ảnh QR sẽ được xoá.</small>
+    </div>
+    <div class="qr-wrap"><img class="qr" alt="Mã VietQR"><small>Mã VietQR (quét được bằng điện thoại khác)</small></div>` : ''}
+    ${f.bin && !useShortcuts() ? `<div class="lbl">Trả bằng Techcombank · 2 bước</div>
     <div class="paysteps">
       <button class="btn primary saveqr"><span class="stepn">1</span>Lưu mã QR vào Ảnh</button>
       <small>Bảng chia sẻ hiện lên → chọn <b>Lưu hình ảnh</b>.</small>
       <button class="btn primary tcb"><span class="stepn">2</span>Mở Techcombank</button>
-      <small>Trong Techcombank: <b>Quét QR</b> → biểu tượng <b>ảnh</b> → chọn mã vừa lưu. Số tài khoản, số tiền, nội dung tự điền sẵn, Ngài chỉ cần xác nhận. Trả xong có thể xoá ảnh mã QR.</small>
+      <small>Trong Techcombank: <b>Quét QR</b> → biểu tượng <b>ảnh</b> → chọn mã vừa lưu. Số tài khoản, số tiền, nội dung tự điền sẵn, Ngài chỉ cần xác nhận. Muốn app tự xoá ảnh QR sau khi trả: <button class="link sc-setup">cài Phím tắt</button>.</small>
     </div>
     <div class="qr-wrap"><img class="qr" alt="Mã VietQR"><small>Mã VietQR (quét được bằng điện thoại khác)</small></div>` : ''}
-    ${f.paidAt ? `<button class="btn danger mt unpaid">Bỏ đánh dấu đã trả</button>` : `<button class="btn mt paid" style="background:var(--ok);color:#fff">✓ Tôi đã chuyển khoản xong</button>`}
+    ${f.paidAt ? `<button class="btn danger mt unpaid">Bỏ đánh dấu đã trả</button>` : `<button class="btn mt paid" style="background:var(--ok);color:#fff">✓ Tôi đã chuyển khoản xong${useShortcuts() ? ' · xoá ảnh QR' : ''}</button>`}
     <div class="help mt">Techcombank không cho app khác mở thẳng màn hình chuyển tiền, nên app dùng mã QR để Techcombank tự điền thông tin.</div>
   </div>`);
   const sh = openSheet({ title: `Phí gửi ${vehName(f.vehicle)}`, titleIcon: f.vehicle === 'bike' ? 'bike' : 'car', acc: f.vehicle === 'bike' ? 'bike' : 'car', body });
@@ -859,8 +869,58 @@ function paySheet(f) {
       toast('Bấm bước 2 để mở Techcombank');
     } catch (e) { if (e?.name !== 'AbortError') toast('Chưa lưu được mã QR'); }
   });
-  $('.paid', body)?.addEventListener('click', async () => { await setPaid(f, true); sh.close(); toast('Đã đánh dấu đã thanh toán'); });
+  $('.sc-pay', body)?.addEventListener('click', () => runShortcut(SC_SAVE, new URL(qrSrc(), location.href).href));
+  $('.sc-setup', body)?.addEventListener('click', () => { sh.close(); setTimeout(() => shortcutSheet(() => paySheet(S.fees.find(x => x.id === f.id))), 250); });
+  $('.paid', body)?.addEventListener('click', async () => {
+    await setPaid(f, true); sh.close();
+    if (useShortcuts()) { toast('Đã đánh dấu đã trả · đang xoá ảnh QR'); setTimeout(() => runShortcut(SC_DELETE), 400); }
+    else toast('Đã đánh dấu đã trả · nhớ xoá ảnh mã QR trong Ảnh');
+  });
   $('.unpaid', body)?.addEventListener('click', async () => { await setPaid(f, false); sh.close(); });
+}
+
+/* Apple không cho web app xoá ảnh trong Thư viện. Phím tắt (Shortcuts) của iPhone thì làm được:
+   "QR phi xe" lưu mã vào album riêng rồi mở Techcombank, "Xoa QR phi xe" xoá cả album đó (iPhone hỏi xác nhận 1 lần). */
+const SC_SAVE = 'QR phi xe', SC_DELETE = 'Xoa QR phi xe', SC_ALBUM = 'QR phi xe';
+const useShortcuts = () => !!(S.profile && S.profile.shortcuts);
+function runShortcut(name, text) {
+  let url = 'shortcuts://run-shortcut?name=' + encodeURIComponent(name);
+  if (text) url += '&input=text&text=' + encodeURIComponent(text);
+  location.href = url;
+}
+function shortcutSheet(after) {
+  const on = useShortcuts();
+  const body = h(`<div class="sc">
+    <div class="help">iPhone không cho web app tự xoá ảnh. Hai <b>Phím tắt</b> nhỏ của Apple làm việc đó thay app: lưu mã QR vào album riêng, mở Techcombank, và xoá album đó sau khi Ngài bấm "đã chuyển khoản". Làm một lần, khoảng 5 phút.</div>
+    <div class="lbl">Bước 1 · Tạo album</div>
+    <ol class="sc-steps"><li>Mở app <b>Ảnh</b> → <b>Album</b> → <b>+</b> → <b>Album mới</b> → đặt tên <b class="k">${SC_ALBUM}</b>.</li></ol>
+    <div class="lbl">Bước 2 · Phím tắt lưu QR</div>
+    <ol class="sc-steps">
+      <li>Mở app <b>Phím tắt</b> → <b>+</b> → đặt tên <b class="k">${SC_SAVE}</b> <button class="link cpn" data-n="${SC_SAVE}">chép tên</button></li>
+      <li>Thêm tác vụ <b>Nhận nội dung của URL</b> (Get Contents of URL) → bấm chữ <b>URL</b> → chọn <b>Đầu vào phím tắt</b>.</li>
+      <li>Thêm <b>Lưu vào album ảnh</b> (Save to Photo Album) → chọn album <b>${SC_ALBUM}</b>.</li>
+      <li>Thêm <b>Mở ứng dụng</b> (Open App) → chọn <b>Techcombank</b>.</li>
+    </ol>
+    <div class="lbl">Bước 3 · Phím tắt xoá QR</div>
+    <ol class="sc-steps">
+      <li><b>+</b> phím tắt mới, tên <b class="k">${SC_DELETE}</b> <button class="link cpn" data-n="${SC_DELETE}">chép tên</button></li>
+      <li>Thêm <b>Tìm ảnh</b> (Find Photos) → <b>Thêm bộ lọc</b> → <b>Album</b> là <b>${SC_ALBUM}</b>.</li>
+      <li>Thêm <b>Xoá ảnh</b> (Delete Photos).</li>
+    </ol>
+    <div class="help mt">Mỗi lần xoá, iPhone sẽ hỏi <i>"Cho phép xoá ảnh?"</i>, Ngài bấm <b>Xoá</b>. Đây là quy định của Apple, không bỏ được. Ảnh vào mục <b>Đã xoá gần đây</b> và tự mất sau 30 ngày.</div>
+    <div class="btn-row mt"><button class="btn t-save">Thử lưu</button><button class="btn t-del">Thử xoá</button></div>
+    <button class="btn primary mt toggle" style="--acc:${on ? 'var(--warn)' : 'var(--ok)'}">${on ? 'Tắt, quay về cách lưu thủ công' : 'Đã cài xong, bật'}</button>
+  </div>`);
+  const sh = openSheet({ title: 'Tự xoá ảnh QR', body });
+  $$('.cpn', body).forEach(b => b.onclick = () => copyText(b.dataset.n, 'tên phím tắt'));
+  $('.t-save', body).onclick = () => runShortcut(SC_SAVE, new URL('icon-512.png', location.href).href);
+  $('.t-del', body).onclick = () => runShortcut(SC_DELETE);
+  $('.toggle', body).onclick = async () => {
+    const p = { id: 'profile', ...(S.profile || {}), shortcuts: !on };
+    await DB.put('prefs', p); S.profile = p; sh.close(); render();
+    toast(p.shortcuts ? 'Đã bật tự xoá ảnh QR' : 'Đã tắt');
+    if (after) setTimeout(after, 250);
+  };
 }
 
 function profileSheet(after) {
@@ -954,6 +1014,7 @@ async function feeCenter() {
     <button class="set-item prof">${IC.home}<span><b>Thông tin căn hộ</b><small>${p.apartment ? `Căn ${esc(p.apartment)}${p.plateCar ? ' · ô tô ' + esc(p.plateCar) : ''}${p.plateBike ? ' · xe máy ' + esc(p.plateBike) : ''}` : 'Số căn hộ, biển số để điền nội dung chuyển khoản'}</small></span></button>
     <button class="set-item gm">${IC.mail}<span><b>Email báo phí (Gmail)</b><small class="gm-txt">Đang tải…</small></span></button>
     <button class="set-item chk hidden">${IC.sync}<span><b>Kiểm tra email ngay</b><small>Bình thường máy chủ tự kiểm tra 10 phút một lần</small></span></button>
+    <button class="set-item scs">${IC.trash}<span><b>Tự xoá ảnh QR sau khi trả</b><small>${useShortcuts() ? '<span style="color:var(--ok)">Đang bật</span> · dùng Phím tắt của iPhone' : 'Chưa bật · cần cài 2 Phím tắt (5 phút)'}</small></span></button>
     <button class="set-item ntf">${IC.bell}<span><b>Thông báo khi có phí mới</b><small class="ntf-txt">…</small></span></button>
   </div>`);
   const sh = openSheet({ title: 'Phí gửi xe', body });
@@ -980,6 +1041,7 @@ async function feeCenter() {
     return st;
   };
   showNtf();
+  $('.scs', body).onclick = () => { sh.close(); setTimeout(() => shortcutSheet(feeCenter), 250); };
   $('.ntf', body).onclick = async () => {
     try {
       if (await pushState() === 'on') { const r = await (await Sync.fetch('api/push/test', { method: 'POST' })).json(); toast(r.sent ? 'Đã gửi thông báo thử' : 'Chưa gửi được, thử bật lại'); return; }

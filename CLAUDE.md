@@ -19,6 +19,7 @@ iPhone giữ đủ dữ liệu trong IndexedDB. Mọi thay đổi vào `outbox`,
 Máy `192.168.50.231`, Tailscale `100.78.213.85`. DAS = `/srv/dev-disk-by-uuid-63bcf028-ccf8-4a65-a3f2-0510da8ead2c`. Thư mục app `DAS/VM_bikencar/{web,data,backup}`.
 
 ## Nhật ký phiên bản
+- **v1.4.0** (01/11/2026) – Tự xoá ảnh QR: web app không xoá được ảnh trong Thư viện, nên dùng 2 Phím tắt iPhone do chủ nhà tự tạo: `QR phi xe` (nhận URL ảnh QR → lưu vào album `QR phi xe` → mở Techcombank) và `Xoa QR phi xe` (tìm ảnh trong album → xoá, iOS hỏi xác nhận). App gọi `shortcuts://run-shortcut`. Bật/tắt ở `prefs.profile.shortcuts`.
 - **v1.3.1** (01/11/2026) – Sửa thanh toán: Techcombank KHÔNG nhận thông tin điền sẵn qua dl.vietqr.io (chỉ mở app). Trang thanh toán đổi thành 2 bước: (1) lưu mã QR vào Ảnh (ảnh QR tải sẵn để iOS cho mở bảng chia sẻ), (2) mở Techcombank → Quét QR → chọn ảnh.
 - **v1.3.0** (01/11/2026) – Tự cập nhật: systemd `vmbikencar-autoupdate.timer` chạy `update.sh --auto` 5 phút/lần (im lặng khi không có gì mới, bỏ qua bản lỗi trong `.bad_commit`). Bản sao tạm của update.sh dùng `mktemp` để 2 lần chạy không giẫm nhau.
 - **v1.2.0** (01/11/2026) – Kết nối Gmail không cần mật khẩu: Google Apps Script (`feemail.SCRIPT_CODE`, quyền `gmail.readonly`, web app /exec + khóa bí mật `scriptKey` trong `data/mail.json`), trang hướng dẫn `/gmail`. Mật khẩu ứng dụng vẫn dùng được (cách 2).
