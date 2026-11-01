@@ -1,22 +1,46 @@
-# MyBike'nCar – cài lên iPhone (không cần App Store)
+# MyBike'nCar trên máy chủ OMV nhà
 
-App là "web app" chạy offline. Chỉ cần đưa lên mạng **một lần** để iPhone tải về, sau đó dùng hoàn toàn offline.
+Dữ liệu (SQLite) và ảnh nằm trên DAS. App trên iPhone giữ một bản để dùng khi mất sóng dưới hầm, có mạng lại thì tự đồng bộ lên OMV.
 
-## 1. Đưa lên GitHub Pages (miễn phí, làm 1 lần, ~5 phút)
-1. Vào github.com, đăng nhập (chưa có thì tạo tài khoản).
-2. Bấm **New repository**, đặt tên `mybikencar`, chọn **Public**, bấm **Create repository**.
-3. Bấm **uploading an existing file**, kéo thả **toàn bộ file trong thư mục này** (index.html, sw.js, manifest.webmanifest, 3 file icon) → **Commit changes**.
-4. Vào **Settings → Pages**, mục *Branch* chọn `main` → **Save**. Đợi 1–2 phút.
-5. Địa chỉ app: `https://<tên-github-của-bạn>.github.io/mybikencar/`
+| | |
+|---|---|
+| Thư mục | `DAS/VM_bikencar/` gồm `web` (mã nguồn), `data` (`mybikencar.db` + `photos/`), `backup` (DB mỗi ngày, giữ 30 bản) |
+| Container | `vm_bikencar` (compose `vm-bikencar`) |
+| Cổng | `8096` http (trong nhà) · `8446` https qua Tailscale (để cài lên iPhone) |
+| Cập nhật | Nút **Cập nhật ngay** trong ⚙︎ Cài đặt của app, hoặc lệnh SSH bên dưới |
 
-## 2. Cài lên iPhone
-1. Mở địa chỉ trên bằng **Safari**.
-2. Bấm nút **Chia sẻ** → **Thêm vào MH chính** → **Thêm**.
-3. Mở app từ biểu tượng trên màn hình chính **một lần khi có mạng**. Từ đó trở đi chạy offline được (kể cả dưới hầm gửi xe không có sóng).
+## Cài lần đầu (SSH vào OMV bằng root, dán cả khối)
+
+```bash
+DAS=/srv/dev-disk-by-uuid-63bcf028-ccf8-4a65-a3f2-0510da8ead2c
+git clone https://github.com/virtualman209/mybikencar $DAS/VM_bikencar/web
+bash $DAS/VM_bikencar/web/server/install.sh
+```
+
+Cuối cùng script in ra địa chỉ dạng `https://vmminipc.<tên-tailnet>.ts.net:8446`.
+
+## Cài lên iPhone
+
+1. Bật Tailscale trên iPhone, mở địa chỉ `https://…ts.net:8446` bằng **Safari**.
+2. Bấm **Chia sẻ → Thêm vào MH chính**.
+3. Chuyển dữ liệu từ app cũ (bản GitHub Pages): mở app cũ → ⚙︎ → **Tạo bản sao lưu** → lưu vào Tệp. Mở app mới → ⚙︎ → **Khôi phục từ bản sao lưu** → chọn tệp đó. Xong thì có thể xoá app cũ.
+
+Chấm nhỏ trên nút ⚙︎: xanh = đã đồng bộ, cam = có thay đổi chờ gửi, xám = chưa kết nối được OMV (dữ liệu vẫn lưu trên máy).
+
+## Lệnh SSH
+
+| Việc | Lệnh |
+|---|---|
+| Cập nhật | `/srv/dev-disk-by-uuid-63bcf028-ccf8-4a65-a3f2-0510da8ead2c/VM_bikencar/web/server/update.sh` |
+| Dựng lại kể cả khi không có gì mới | thêm `--force` vào lệnh trên |
+| Xem nhật ký cập nhật | `tail -20 /srv/dev-disk-by-uuid-63bcf028-ccf8-4a65-a3f2-0510da8ead2c/VM_bikencar/web/update.log` |
+| Xem nhật ký app | `docker logs --tail 50 vm_bikencar` |
+| Khởi động lại | `docker restart vm_bikencar` |
+
+Bản mới không chạy được thì `update.sh` tự quay về bản cũ và không thử lại bản lỗi đó (trừ khi dùng `--force`).
 
 ## Lưu ý
-- Dữ liệu & ảnh nằm trong app trên iPhone, không lên mạng, không vào Thư viện ảnh. GitHub chỉ chứa mã app, không chứa dữ liệu.
-- Hãy dùng app từ biểu tượng màn hình chính (dữ liệu trong tab Safari là riêng, không dùng chung).
-- **Xoá biểu tượng app = mất dữ liệu.** Thỉnh thoảng vào ⚙︎ Cài đặt → Tạo bản sao lưu → lưu vào app Tệp.
-- Lần đầu chụp ảnh, iPhone sẽ hỏi quyền dùng camera → cho phép.
-- Sửa app sau này: sửa file rồi tăng số `VERSION` trong `sw.js`, upload lại; app tự cập nhật ở lần mở tiếp theo khi có mạng.
+
+- Không có mật khẩu: chỉ mở được trong mạng nhà và qua Tailscale, router không mở cổng nào.
+- Bản sao DB mỗi ngày nằm cùng ổ DAS (giống các web VM khác, rủi ro R-13). Ảnh nằm ở `data/photos`.
+- Bản GitHub Pages (`virtualman209.github.io/mybikencar`) vẫn chạy nhưng chỉ lưu trên máy, không đồng bộ.

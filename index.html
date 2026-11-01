@@ -52,6 +52,14 @@ svg{display:block}
 .brand span{color:var(--bike)} .brand i{font-style:normal;color:var(--car)}
 .icon-btn{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:var(--muted)}
 .icon-btn:active{background:var(--soft)}
+.icon-btn{position:relative}
+.sync-dot{position:absolute;right:5px;top:5px;width:10px;height:10px;border-radius:50%;border:2px solid var(--bg);background:var(--muted)}
+.sync-dot.off{display:none}
+.sync-dot.ok{background:var(--ok)}
+.sync-dot.pending,.sync-dot.syncing{background:var(--bike)}
+.sync-dot.syncing{animation:pulse 1s ease-in-out infinite}
+.sync-dot.offline{background:var(--muted)}
+@keyframes pulse{50%{opacity:.35}}
 .install{margin-top:12px;background:var(--soft);border-radius:14px;padding:10px 12px 10px 14px;font-size:14px;display:flex;gap:10px;align-items:center}
 .install b{font-weight:700}
 .install .x{margin-left:auto;flex:none;width:28px;height:28px;display:grid;place-items:center;color:var(--muted)}
@@ -253,7 +261,7 @@ textarea.field{min-height:84px;resize:vertical}
 <main class="home" id="home">
   <div class="top">
     <h1 class="brand">My<span>Bike</span>'n<i>Car</i></h1>
-    <button class="icon-btn" id="btnSettings" aria-label="Cài đặt"></button>
+    <button class="icon-btn" id="btnSettings" aria-label="Cài đặt"><span class="g"></span><span id="syncDot" class="sync-dot off"></span></button>
   </div>
   <div class="install hidden" id="install"></div>
 
@@ -335,18 +343,20 @@ const IC = {
   trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>`,
   download: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 19h14"/></svg>`,
   upload: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 19h14"/></svg>`,
+  cloud: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h10.5a4 4 0 0 0 .6-7.96A6 6 0 0 0 6.3 9.5 4.3 4.3 0 0 0 7 18z"/></svg>`,
+  sync: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4"/></svg>`,
   disk: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>`,
   shareIOS: `<svg viewBox="0 0 24 24" width="18" style="display:inline;vertical-align:-3px" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5v10h14V11h-1"/></svg>`,
 };
 const icon = n => IC[n] || '';
 $$('[data-icon]').forEach(el => el.innerHTML = icon(el.dataset.icon));
-$('#btnSettings').innerHTML = IC.gear;
+$('#btnSettings .g').innerHTML = IC.gear;
 
 /* =========================================================
    Config: Seasons Avenue
    ========================================================= */
 /* App version – keep in sync with VERSION in sw.js */
-const APP_VERSION = '4';
+const APP_VERSION = 'v1.0.0';
 
 const VEH = {
   bike: { name: 'Xe máy', floors: ['M', '2', '3', '4'], zones: f => f === 'M' ? ['S1', 'S2', 'S3', 'S4', 'EV'] : ['S1', 'S2', 'S3', 'S4'] },
@@ -362,12 +372,16 @@ function locText(p) {
 /* =========================================================
    Storage (IndexedDB – private to this app, never Photos)
    ========================================================= */
+const SYNCED = new Set(['parkings', 'maint', 'photos']);
 const DB = {
   db: null,
   open() {
     return new Promise((res, rej) => {
-      const r = indexedDB.open('mybikencar', 1);
-      r.onupgradeneeded = () => { for (const s of ['parkings', 'maint', 'photos', 'blobs']) if (!r.result.objectStoreNames.contains(s)) r.result.createObjectStore(s, { keyPath: 'id' }); };
+      const r = indexedDB.open('mybikencar', 2);
+      r.onupgradeneeded = () => {
+        for (const s of ['parkings', 'maint', 'photos', 'blobs']) if (!r.result.objectStoreNames.contains(s)) r.result.createObjectStore(s, { keyPath: 'id' });
+        if (!r.result.objectStoreNames.contains('outbox')) r.result.createObjectStore('outbox', { keyPath: 'seq', autoIncrement: true });
+      };
       r.onsuccess = () => { this.db = r.result; res(); };
       r.onerror = () => rej(r.error);
     });
@@ -381,9 +395,127 @@ const DB = {
   },
   all(s) { return this.run(s, 'readonly', st => st.getAll()); },
   get(s, id) { return this.run(s, 'readonly', st => st.get(id)); },
-  put(s, o) { return this.run(s, 'readwrite', st => { st.put(o); }); },
-  del(s, id) { return this.run(s, 'readwrite', st => { st.delete(id); }); },
+  // Local-only writes (used when applying data that came from the server).
+  putRaw(s, o) { return this.run(s, 'readwrite', st => { st.put(o); }); },
+  delRaw(s, id) { return this.run(s, 'readwrite', st => { st.delete(id); }); },
+  // App writes: also queue the change for the OMV server when sync is on.
+  async put(s, o) { await this.putRaw(s, o); if (SYNCED.has(s) && Sync.on) await Sync.queue('put', s, o.id); },
+  async del(s, id) { await this.delRaw(s, id); if (SYNCED.has(s) && Sync.on) await Sync.queue('del', s, id); },
+  delMany(s, keys) { return this.run(s, 'readwrite', st => { for (const k of keys) st.delete(k); }); },
 };
+
+/* =========================================================
+   Sync with the OMV server (offline-first)
+   iPhone keeps a full copy in IndexedDB; changes go into an outbox and are pushed
+   whenever the server is reachable, then the server copy is pulled back.
+   On GitHub Pages there is no server, so the app stays local-only.
+   ========================================================= */
+const Sync = {
+  on: false, state: 'off', pending: 0, lastOk: 0, lastSig: '', timer: null, running: false, again: false,
+  detectLocal() {
+    if (/github\.io$/.test(location.hostname) || location.protocol === 'file:') return false;
+    try { return localStorage.getItem('serverMode') === '1'; } catch { return false; }
+  },
+  async detect() {
+    if (/github\.io$/.test(location.hostname) || location.protocol === 'file:') return false;
+    try {
+      const r = await this.fetch('api/info', {}, 6000);
+      const j = r.ok ? await r.json() : null;
+      const ok = j?.app === 'mybikencar';
+      try { localStorage.setItem('serverMode', ok ? '1' : '0'); } catch {}
+      return ok;
+    } catch { return this.detectLocal(); }  // offline: trust what we learned last time
+  },
+  fetch(url, opt = {}, ms = 20000) {
+    const ac = new AbortController(); const t = setTimeout(() => ac.abort(), ms);
+    return fetch(url, { cache: 'no-store', ...opt, signal: ac.signal }).finally(() => clearTimeout(t));
+  },
+  async queue(op, store, id) { await DB.run('outbox', 'readwrite', st => { st.add({ op, store, id, at: Date.now() }); }); this.kick(); },
+  kick(ms = 400) { if (!this.on) return; clearTimeout(this.timer); this.timer = setTimeout(() => this.run(), ms); },
+  setState(s) { this.state = s; paintSync(); },
+  async run() {
+    if (!this.on) return;
+    if (this.running) { this.again = true; return; }
+    this.running = true;
+    try {
+      const pushed = await this.push();
+      if (pushed) await this.pull();
+    } catch (e) { console.warn('sync', e); this.setState('offline'); }
+    finally {
+      this.running = false;
+      if (this.again) { this.again = false; this.kick(50); }
+    }
+  },
+  // Send queued changes. Returns true when the outbox is empty afterwards.
+  async push() {
+    const entries = (await DB.all('outbox')).sort((a, b) => a.seq - b.seq);
+    this.pending = new Set(entries.map(e => e.store + '|' + e.id)).size;
+    if (!entries.length) return true;
+    this.setState('syncing');
+    const lastByKey = new Map();
+    for (const e of entries) lastByKey.set(e.store + '|' + e.id, e);
+    const todo = [...lastByKey.values()].sort((a, b) => a.seq - b.seq);
+    for (const e of todo) {
+      let r;
+      try { r = await this.send(e); }
+      catch (err) { this.setState('offline'); return false; }  // network down: keep the queue
+      if (r && r.status >= 500) { this.setState('offline'); return false; }
+      if (r && !r.ok) console.warn('sync dropped', e, r.status);  // 4xx: drop it so the queue never gets stuck
+      const done = entries.filter(x => x.store === e.store && x.id === e.id && x.seq <= e.seq).map(x => x.seq);
+      await DB.delMany('outbox', done);
+      this.pending = Math.max(0, this.pending - 1); paintSync();
+    }
+    return (await DB.all('outbox')).length === 0;
+  },
+  async send(e) {
+    if (e.op === 'del') return this.fetch(`api/${e.store}/${encodeURIComponent(e.id)}`, { method: 'DELETE' });
+    if (e.store === 'photos') {
+      const meta = await DB.get('photos', e.id); if (!meta) return null;
+      const fd = new FormData(); fd.append('meta', JSON.stringify(meta));
+      const b = await DB.get('blobs', e.id);
+      if (b) { fd.append('full', new Blob([b.full], { type: 'image/jpeg' }), 'full.jpg'); fd.append('thumb', new Blob([b.thumb || b.full], { type: 'image/jpeg' }), 'thumb.jpg'); }
+      return this.fetch('api/photos', { method: 'POST', body: fd }, 120000);
+    }
+    const obj = await DB.get(e.store, e.id); if (!obj) return null;
+    return this.fetch(`api/${e.store}/${encodeURIComponent(e.id)}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(obj) });
+  },
+  // Make the local copy match the server (except records that still have changes waiting to be sent).
+  async pull(force) {
+    const r = await this.fetch('api/state');
+    if (!r.ok) throw new Error('state ' + r.status);
+    const data = await r.json();
+    this.lastOk = Date.now();
+    const sig = JSON.stringify(data);
+    if (sig !== this.lastSig || force) {
+      const waiting = new Set((await DB.all('outbox')).map(e => e.store + '|' + e.id));
+      for (const s of ['parkings', 'maint', 'photos']) {
+        const local = await DB.all(s); const remote = new Map((data[s] || []).map(o => [o.id, o]));
+        const puts = [...remote.values()].filter(o => !waiting.has(s + '|' + o.id));
+        const dels = local.filter(o => !remote.has(o.id) && !waiting.has(s + '|' + o.id)).map(o => o.id);
+        await DB.run(s, 'readwrite', st => { for (const o of puts) st.put(o); for (const id of dels) st.delete(id); });
+        if (s === 'photos' && dels.length) await DB.delMany('blobs', dels);
+      }
+      this.lastSig = sig;
+      await loadAll(); render();
+    }
+    this.setState((await DB.all('outbox')).length ? 'pending' : 'ok');
+  },
+};
+function paintSync() {
+  const dot = $('#syncDot'); if (!dot) return;
+  const st = Sync.on ? (Sync.pending && Sync.state !== 'syncing' ? 'pending' : Sync.state) : 'off';
+  dot.className = 'sync-dot ' + st;
+  dot.title = { ok: 'Đã đồng bộ với OMV', pending: 'Chờ gửi lên OMV', syncing: 'Đang đồng bộ…', offline: 'Không kết nối được OMV, dữ liệu vẫn lưu trên máy', off: '' }[st] || '';
+  const sl = $('#syncLine'); if (sl) sl.innerHTML = syncText();
+}
+function syncText() {
+  if (!Sync.on) return '';
+  const last = Sync.lastOk ? `lần cuối ${fmtTime(Sync.lastOk)}` : 'chưa đồng bộ lần nào';
+  if (Sync.state === 'syncing') return 'Đang đồng bộ…';
+  if (Sync.pending) return `<b style="color:var(--bike)">${Sync.pending} thay đổi chờ gửi</b> · ${Sync.state === 'offline' ? 'chưa kết nối được OMV' : 'đang gửi'}`;
+  if (Sync.state === 'offline') return `<b style="color:var(--warn)">Chưa kết nối được OMV</b> · ${last}`;
+  return `<b style="color:var(--ok)">Đã đồng bộ</b> · ${last}`;
+}
 const S = { parkings: [], maint: [], photos: [] };
 async function loadAll() {
   [S.parkings, S.maint, S.photos] = await Promise.all([DB.all('parkings'), DB.all('maint'), DB.all('photos')]);
@@ -395,9 +527,19 @@ const urlCache = new Map();
 async function photoURL(id, v = 'thumb') {
   const k = id + ':' + v;
   if (urlCache.has(k)) return urlCache.get(k);
-  const b = await DB.get('blobs', id); if (!b) return '';
+  const b = await DB.get('blobs', id);
+  // Photo taken on another device (or cleared from this one): load it from the OMV server.
+  // The service worker keeps a copy so it still shows when offline.
+  if (!b) return Sync.on ? `api/photos/${encodeURIComponent(id)}/${v}` : '';
   const u = URL.createObjectURL(new Blob([b[v] || b.full], { type: 'image/jpeg' }));
   urlCache.set(k, u); return u;
+}
+async function photoFile(id, name) {
+  const b = await DB.get('blobs', id);
+  if (b) return new File([b.full], name, { type: 'image/jpeg' });
+  if (!Sync.on) return null;
+  try { const r = await fetch(`api/photos/${encodeURIComponent(id)}/full`); return r.ok ? new File([await r.blob()], name, { type: 'image/jpeg' }) : null; }
+  catch { return null; }
 }
 function hydrate(root) {
   $$('img[data-pid]', root).forEach(async img => { if (!img.getAttribute('src')) img.src = await photoURL(img.dataset.pid, img.dataset.v || 'thumb'); });
@@ -835,8 +977,9 @@ function viewer(ids, start) {
     const pr = meta?.kind === 'parking' && S.parkings.find(r => r.id === meta.ref);
     if (pr) label += ` · ${pr.type === 'bike' ? 'Xe máy' : 'Ô tô'} ${locText(pr)}`;
     $('.v-meta', el).textContent = `${label} · ${meta ? fmtDate(meta.ts) + ' ' + fmtTime(meta.ts) : ''}`;
-    const b = await DB.get('blobs', id);
-    curFile = b ? new File([b.full], `MyBikenCar-${isoDate(meta?.ts || Date.now())}-${id.slice(-4)}.jpg`, { type: 'image/jpeg' }) : null;
+    curFile = null;
+    const f = await photoFile(id, `MyBikenCar-${isoDate(meta?.ts || Date.now())}-${id.slice(-4)}.jpg`);
+    if (ids[i] === id) curFile = f;
   };
   const close = () => { el.classList.remove('open'); setTimeout(() => el.remove(), 220); };
   $('.close', el).onclick = close;
@@ -870,14 +1013,62 @@ function unb64(str) { const s = atob(str); const a = new Uint8Array(s.length); f
 async function settings() {
   let usage = '';
   try { const e = await navigator.storage?.estimate?.(); if (e) usage = `Đang dùng khoảng ${(e.usage / 1048576).toFixed(1).replace('.', ',')} MB trên máy`; } catch {}
+  const srv = Sync.on;
   const body = h(`<div>
-    <button class="set-item mk">${IC.download}<span><b>Tạo bản sao lưu</b><small>Gồm vị trí đỗ, lịch bảo dưỡng và toàn bộ ảnh</small></span></button>
-    <button class="set-item imp">${IC.upload}<span><b>Khôi phục từ bản sao lưu</b><small>Chọn tệp .json đã lưu trước đó</small></span></button>
+    ${srv ? `<div class="lbl">Máy chủ OMV</div>
+    <div class="set-item" style="cursor:default">${IC.cloud}<span><b>Đồng bộ</b><small id="syncLine">${syncText()}</small></span></div>
+    <button class="set-item syncnow">${IC.sync}<span><b>Đồng bộ ngay</b><small>Gửi thay đổi và tải dữ liệu mới nhất từ OMV</small></span></button>
+    <div class="set-item upd" style="cursor:default;flex-wrap:wrap">${IC.download}<span style="flex:1"><b>Phiên bản ${esc(APP_VERSION)}</b><small class="upd-txt">Đang kiểm tra bản mới…</small></span>
+      <button class="btn primary upd-btn" style="--acc:var(--ink);height:40px;width:auto;padding:0 14px;font-size:14px">Cập nhật ngay</button></div>
+    <div class="lbl">Sao lưu</div>` : ''}
+    <button class="set-item mk">${IC.download}<span><b>Tạo bản sao lưu</b><small>${srv ? 'Lấy từ OMV: vị trí đỗ, lịch bảo dưỡng và toàn bộ ảnh' : 'Gồm vị trí đỗ, lịch bảo dưỡng và toàn bộ ảnh'}</small></span></button>
+    <button class="set-item imp">${IC.upload}<span><b>Khôi phục từ bản sao lưu</b><small>${srv ? 'Chọn tệp .json, dữ liệu được gộp lên OMV' : 'Chọn tệp .json đã lưu trước đó'}</small></span></button>
     <div class="set-item" style="cursor:default">${IC.disk}<span><b>Dữ liệu</b><small>${S.parkings.length} lần đỗ · ${S.maint.length} lần bảo dưỡng<br>${parkingPhotos().length} ảnh đã chụp · ${S.photos.length - parkingPhotos().length} ảnh phiếu bảo dưỡng${usage ? '<br>' + usage : ''}</small></span></div>
-    <div class="help" style="margin-top:12px">Mọi dữ liệu và ảnh chỉ nằm trong app này trên iPhone của bạn, không lên mạng, không vào Thư viện ảnh. Nếu xoá app khỏi màn hình chính thì dữ liệu cũng mất, nên thỉnh thoảng hãy tạo bản sao lưu và lưu vào app Tệp (Files).</div>
-    <div class="help" style="margin-top:10px;text-align:center">MyBike'nCar · phiên bản ${APP_VERSION}</div>
+    <div class="help" style="margin-top:12px">${srv
+      ? 'Dữ liệu và ảnh lưu trên máy chủ OMV nhà (DAS › VM_bikencar), không vào Thư viện ảnh. iPhone giữ một bản để dùng khi mất sóng dưới hầm, có mạng lại thì tự gửi lên OMV.'
+      : 'Mọi dữ liệu và ảnh chỉ nằm trong app này trên iPhone của bạn, không lên mạng, không vào Thư viện ảnh. Nếu xoá app khỏi màn hình chính thì dữ liệu cũng mất, nên thỉnh thoảng hãy tạo bản sao lưu và lưu vào app Tệp (Files).'}</div>
+    <div class="help" style="margin-top:10px;text-align:center">MyBike'nCar · phiên bản ${esc(APP_VERSION)}${srv ? ' · máy chủ OMV' : ''}</div>
   </div>`);
-  const sh = openSheet({ title: 'Cài đặt', body });
+  const sh = openSheet({ title: 'Cài đặt', body, onCancel: () => clearInterval(pollT) });
+  let pollT = null;
+
+  if (srv) {
+    $('.syncnow', body).onclick = async () => { Sync.lastSig = ''; await Sync.run(); paintSync(); toast(Sync.state === 'offline' ? 'Chưa kết nối được OMV' : 'Đã đồng bộ'); };
+    const txt = $('.upd-txt', body), btn = $('.upd-btn', body);
+    const showUpd = u => {
+      const last = u.last;
+      if (u.requested) txt.textContent = 'Đã gửi lệnh, đang chờ máy chủ…';
+      else if (last?.state === 'running') txt.textContent = last.msg;
+      else if (u.current !== APP_VERSION) txt.innerHTML = `Máy chủ đã có <b>${esc(u.current)}</b>, mở lại app để dùng`;
+      else if (u.latest && u.latest !== u.current) txt.innerHTML = `Có bản mới <b style="color:var(--ok)">${esc(u.latest)}</b> trên GitHub`;
+      else if (last?.state === 'failed') txt.innerHTML = `<span style="color:var(--warn)">${esc(last.msg)}</span>`;
+      else txt.textContent = u.latest ? 'Đang ở bản mới nhất' : 'Bấm để kiểm tra và cập nhật từ GitHub';
+    };
+    const getUpd = async () => { const r = await Sync.fetch('api/update', {}, 10000); return r.json(); };
+    getUpd().then(showUpd).catch(() => { txt.textContent = 'Chưa kết nối được OMV'; });
+    btn.onclick = async () => {
+      btn.disabled = true;
+      try {
+        const r = await Sync.fetch('api/update', { method: 'POST' }, 10000); if (!r.ok) throw new Error(r.status);
+        txt.textContent = 'Đã gửi lệnh, đang chờ máy chủ…';
+        const started = Date.now();
+        clearInterval(pollT);
+        pollT = setInterval(async () => {
+          let u; try { u = await getUpd(); } catch { txt.textContent = 'Máy chủ đang khởi động lại…'; return; }
+          showUpd(u);
+          const st = u.last?.state, fresh = u.last && new Date(u.last.at).getTime() >= started - 5000;
+          if (u.requested && Date.now() - started > 30000) { txt.innerHTML = '<span style="color:var(--warn)">Máy chủ chưa nhận lệnh. Kiểm tra đã chạy install.sh trên OMV chưa.</span>'; clearInterval(pollT); btn.disabled = false; return; }
+          if (u.current !== APP_VERSION || (fresh && st === 'done')) {
+            clearInterval(pollT); txt.textContent = `Đã cập nhật lên ${u.current}, đang mở lại…`;
+            try { sessionStorage.setItem('justUpdated', '1'); const reg = await navigator.serviceWorker?.getRegistration(); await reg?.update(); } catch {}
+            setTimeout(() => location.reload(), 1200);
+          } else if (fresh && (st === 'uptodate' || st === 'failed')) { clearInterval(pollT); btn.disabled = false; if (st === 'uptodate') txt.textContent = 'Đang ở bản mới nhất'; }
+          if (Date.now() - started > 300000) { clearInterval(pollT); btn.disabled = false; }
+        }, 3000);
+      } catch { txt.textContent = 'Chưa kết nối được OMV'; btn.disabled = false; }
+    };
+  }
+
   const mk = $('.mk', body);
   mk.onclick = async () => {
     if (mk.file) { // second tap: share (needs to be a direct tap on iOS)
@@ -888,12 +1079,20 @@ async function settings() {
     }
     const done = busy('Đang tạo bản sao lưu…');
     try {
-      const blobs = await DB.all('blobs');
-      const data = { app: 'mybikencar', v: 1, at: Date.now(), parkings: S.parkings, maint: S.maint, photos: S.photos,
-        blobs: blobs.map(b => ({ id: b.id, full: b64(b.full), thumb: b64(b.thumb) })) };
-      mk.file = new File([JSON.stringify(data)], `MyBikenCar-saoluu-${isoDate(new Date())}.json`, { type: 'application/json' });
+      const name = `MyBikenCar-saoluu-${isoDate(new Date())}.json`;
+      if (srv) {
+        await Sync.run();
+        const r = await Sync.fetch('api/backup', {}, 300000); if (!r.ok) throw new Error('máy chủ trả lỗi ' + r.status);
+        mk.file = new File([await r.blob()], name, { type: 'application/json' });
+      } else {
+        const blobs = await DB.all('blobs');
+        const data = { app: 'mybikencar', v: 1, at: Date.now(), parkings: S.parkings, maint: S.maint, photos: S.photos,
+          blobs: blobs.map(b => ({ id: b.id, full: b64(b.full), thumb: b64(b.thumb) })) };
+        mk.file = new File([JSON.stringify(data)], name, { type: 'application/json' });
+      }
       mk.innerHTML = `${IC.share}<span><b>Lưu tệp sao lưu (${(mk.file.size / 1048576).toFixed(1).replace('.', ',')} MB)</b><small>Bấm rồi chọn “Lưu vào Tệp”</small></span>`;
-    } finally { done(); }
+    } catch (e) { alert('Không tạo được bản sao lưu: ' + (e.message || 'chưa kết nối được OMV')); }
+    finally { done(); }
   };
   $('.imp', body).onclick = () => {
     const inp = $('#bakIn');
@@ -901,12 +1100,20 @@ async function settings() {
       const f = inp.files[0]; inp.value = ''; if (!f) return;
       const done = busy('Đang khôi phục…');
       try {
-        const d = JSON.parse(await f.text());
+        const text = await f.text();
+        const d = JSON.parse(text);
         if (d.app !== 'mybikencar') throw new Error('Tệp không phải bản sao lưu MyBike\'nCar');
-        for (const b of d.blobs || []) await DB.put('blobs', { id: b.id, full: unb64(b.full), thumb: unb64(b.thumb) });
-        for (const s of ['photos', 'parkings', 'maint']) for (const o of d[s] || []) await DB.put(s, o);
+        if (srv) {
+          const r = await Sync.fetch('api/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: text }, 300000);
+          if (!r.ok) throw new Error('máy chủ trả lỗi ' + r.status);
+          for (const b of d.blobs || []) await DB.putRaw('blobs', { id: b.id, full: unb64(b.full), thumb: unb64(b.thumb) });
+          Sync.lastSig = ''; await Sync.run();
+        } else {
+          for (const b of d.blobs || []) await DB.put('blobs', { id: b.id, full: unb64(b.full), thumb: unb64(b.thumb) });
+          for (const s of ['photos', 'parkings', 'maint']) for (const o of d[s] || []) await DB.put(s, o);
+        }
         await loadAll(); render(); sh.close(); toast('Đã khôi phục dữ liệu');
-      } catch (e) { alert('Không khôi phục được: ' + e.message); }
+      } catch (e) { alert('Không khôi phục được: ' + (e.message || 'chưa kết nối được OMV')); }
       finally { done(); }
     };
     inp.click();
@@ -937,12 +1144,16 @@ $('#btnSettings').onclick = settings;
 $('#navPhotos').onclick = () => openPage('pagePhotos', 'Ảnh đã chụp', renderPhotos);
 $('#navHistory').onclick = () => openPage('pageHistory', 'Lịch sử đỗ xe', renderHistory);
 $('#navMaint').onclick = () => openPage('pageMaint', 'Lịch bảo dưỡng xe', renderMaint);
-document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { render(); Sync.kick(100); } });
+addEventListener('online', () => Sync.kick(100));
+setInterval(() => { if (!document.hidden) Sync.kick(0); }, 60000);
 
 (async () => {
+  Sync.on = Sync.detectLocal();  // known server install: queue changes even before the network answers
   try { await DB.open(); await loadAll(); }
   catch (e) { alert('Không mở được bộ nhớ của app: ' + e.message); }
-  render(); installHint();
+  render(); installHint(); paintSync();
+  Sync.detect().then(on => { Sync.on = on; paintSync(); if (on) Sync.kick(0); });
   try { navigator.storage?.persist?.(); } catch {}
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
     // When a new version is published, the new service worker takes over and the app reloads itself once.

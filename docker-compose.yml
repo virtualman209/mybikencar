@@ -1,0 +1,20 @@
+# MyBike'nCar trên OMV. Thư mục: DAS/VM_bikencar/{web,data,backup}; file này nằm trong web/.
+# Cài lần đầu: server/install.sh   ·   Cập nhật: nút trong app, hoặc server/update.sh
+name: vm-bikencar
+
+services:
+  vm_bikencar:
+    container_name: vm_bikencar
+    image: vm-bikencar:local
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8096:8000"
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
+    volumes:
+      - ../data:/app/data
+      - ../backup:/backup
+      - /etc/localtime:/etc/localtime:ro
