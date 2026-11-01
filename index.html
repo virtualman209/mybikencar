@@ -241,6 +241,34 @@ textarea.field{min-height:84px;resize:vertical}
 .toast.show{transform:none}
 .toast .acts{display:flex;gap:8px;margin-top:10px}
 .toast .acts button{flex:1;height:40px;border-radius:10px;font-weight:700;color:#fff;font-size:14px}
+/* fees */
+#fees:empty{display:none}
+#fees{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.fee-card{display:block;text-align:left;width:100%;background:var(--card);border:2.5px solid var(--acc);border-radius:var(--r);padding:12px 14px;box-shadow:0 3px 0 var(--acc);transition:transform .12s,box-shadow .12s}
+.fee-card:active{transform:translateY(3px);box-shadow:0 0 0 var(--acc)}
+.fee-top{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:.3px}
+.fee-amt{display:block;font-size:28px;font-weight:850;letter-spacing:-.6px;margin-top:2px}
+.fee-sub{display:block;font-size:14px;color:var(--muted)}
+.pill{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:2px 9px;text-transform:none;letter-spacing:0;white-space:nowrap;flex:none}
+.pill.late{background:var(--warn);color:#fff}
+.pill.soon{background:color-mix(in srgb,var(--bike) 18%,transparent);color:var(--bike)}
+.pill.fine{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok)}
+.pay-amt{font-size:34px;font-weight:850;letter-spacing:-.8px;text-align:center;margin-top:2px}
+.pay-sub{text-align:center;color:var(--muted);font-size:14px}
+.pay-sub .late{color:var(--warn);font-weight:700}.pay-sub .soon{color:var(--bike);font-weight:700}.pay-sub .fine{color:var(--ok);font-weight:700}
+.paid-box{margin-top:10px;text-align:center;background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok);font-weight:700;border-radius:12px;padding:10px}
+.kv{background:var(--card);border-radius:12px 12px 0 0;padding:10px 12px}
+.kv span{display:block;font-weight:650}.kv small{color:var(--muted)}
+.copy-row{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--card);padding:8px 8px 8px 12px;border-top:1px solid var(--soft)}
+.copy-row:last-of-type{border-radius:0 0 12px 12px}
+.copy-row b{font-size:18px;letter-spacing:.3px;font-variant-numeric:tabular-nums}
+.cp{font-weight:700;font-size:14px}
+.copy-row .cp{background:var(--soft);border-radius:9px;height:34px;padding:0 12px}
+.warn-line{font-size:14px;color:var(--warn);margin-top:8px}
+.link{color:var(--acc,var(--ink));font-weight:700;text-decoration:underline}
+.qr-wrap{margin-top:14px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.qr-wrap img{width:min(240px,70vw);aspect-ratio:1;background:#fff;border-radius:14px;padding:6px}
+.qr-wrap small{color:var(--muted);font-size:12.5px;text-align:center}
 .busy{position:fixed;inset:0;z-index:110;display:grid;place-items:center;background:rgba(0,0,0,.25)}
 .busy div{background:var(--card);color:var(--ink);padding:14px 18px;border-radius:14px;font-weight:600}
 .btn.danger-fill{background:transparent;color:var(--warn);border:2px solid var(--warn)}
@@ -264,6 +292,7 @@ textarea.field{min-height:84px;resize:vertical}
     <button class="icon-btn" id="btnSettings" aria-label="Cài đặt"><span class="g"></span><span id="syncDot" class="sync-dot off"></span></button>
   </div>
   <div class="install hidden" id="install"></div>
+  <section id="fees"></section>
 
   <div class="vehicles">
     <button class="veh" id="btnBike" style="--acc:var(--bike)">
@@ -345,6 +374,10 @@ const IC = {
   upload: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 19h14"/></svg>`,
   cloud: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h10.5a4 4 0 0 0 .6-7.96A6 6 0 0 0 6.3 9.5 4.3 4.3 0 0 0 7 18z"/></svg>`,
   sync: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4"/></svg>`,
+  wallet: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2.5"/><path d="M3 10h18M16 15h2"/><path d="M6 6V5a2 2 0 0 1 2-2h8"/></svg>`,
+  home: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5 12 4l8 6.5V20H4z"/><path d="M10 20v-5h4v5"/></svg>`,
+  mail: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m4 7 8 6 8-6"/></svg>`,
+  bell: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>`,
   disk: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>`,
   shareIOS: `<svg viewBox="0 0 24 24" width="18" style="display:inline;vertical-align:-3px" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5v10h14V11h-1"/></svg>`,
 };
@@ -356,7 +389,7 @@ $('#btnSettings .g').innerHTML = IC.gear;
    Config: Seasons Avenue
    ========================================================= */
 /* App version – keep in sync with VERSION in sw.js */
-const APP_VERSION = 'v1.0.0';
+const APP_VERSION = 'v1.1.0';
 
 const VEH = {
   bike: { name: 'Xe máy', floors: ['M', '2', '3', '4'], zones: f => f === 'M' ? ['S1', 'S2', 'S3', 'S4', 'EV'] : ['S1', 'S2', 'S3', 'S4'] },
@@ -372,14 +405,14 @@ function locText(p) {
 /* =========================================================
    Storage (IndexedDB – private to this app, never Photos)
    ========================================================= */
-const SYNCED = new Set(['parkings', 'maint', 'photos']);
+const SYNCED = new Set(['parkings', 'maint', 'photos', 'fees', 'prefs']);
 const DB = {
   db: null,
   open() {
     return new Promise((res, rej) => {
-      const r = indexedDB.open('mybikencar', 2);
+      const r = indexedDB.open('mybikencar', 3);
       r.onupgradeneeded = () => {
-        for (const s of ['parkings', 'maint', 'photos', 'blobs']) if (!r.result.objectStoreNames.contains(s)) r.result.createObjectStore(s, { keyPath: 'id' });
+        for (const s of ['parkings', 'maint', 'photos', 'blobs', 'fees', 'prefs']) if (!r.result.objectStoreNames.contains(s)) r.result.createObjectStore(s, { keyPath: 'id' });
         if (!r.result.objectStoreNames.contains('outbox')) r.result.createObjectStore('outbox', { keyPath: 'seq', autoIncrement: true });
       };
       r.onsuccess = () => { this.db = r.result; res(); };
@@ -488,7 +521,7 @@ const Sync = {
     const sig = JSON.stringify(data);
     if (sig !== this.lastSig || force) {
       const waiting = new Set((await DB.all('outbox')).map(e => e.store + '|' + e.id));
-      for (const s of ['parkings', 'maint', 'photos']) {
+      for (const s of ['parkings', 'maint', 'photos', 'fees', 'prefs']) {
         const local = await DB.all(s); const remote = new Map((data[s] || []).map(o => [o.id, o]));
         const puts = [...remote.values()].filter(o => !waiting.has(s + '|' + o.id));
         const dels = local.filter(o => !remote.has(o.id) && !waiting.has(s + '|' + o.id)).map(o => o.id);
@@ -516,9 +549,10 @@ function syncText() {
   if (Sync.state === 'offline') return `<b style="color:var(--warn)">Chưa kết nối được OMV</b> · ${last}`;
   return `<b style="color:var(--ok)">Đã đồng bộ</b> · ${last}`;
 }
-const S = { parkings: [], maint: [], photos: [] };
+const S = { parkings: [], maint: [], photos: [], fees: [], profile: {} };
 async function loadAll() {
-  [S.parkings, S.maint, S.photos] = await Promise.all([DB.all('parkings'), DB.all('maint'), DB.all('photos')]);
+  [S.parkings, S.maint, S.photos, S.fees] = await Promise.all([DB.all('parkings'), DB.all('maint'), DB.all('photos'), DB.all('fees')]);
+  S.profile = (await DB.get('prefs', 'profile')) || { id: 'profile' };
 }
 const latest = type => S.parkings.filter(p => p.type === type).sort((a, b) => b.ts - a.ts)[0];
 
@@ -709,8 +743,231 @@ function renderBadges() {
   $('#bMaint').textContent = last ? `gần nhất ${fmtDate(parseISO(last.date))}` : '';
 }
 function render() {
-  renderStatus(); renderPlan(); renderBadges();
+  renderFees(); renderStatus(); renderPlan(); renderBadges();
   for (const [id, fn] of [['pagePhotos', renderPhotos], ['pageHistory', renderHistory], ['pageMaint', renderMaint]]) if ($('#' + id).classList.contains('open')) fn();
+}
+
+/* =========================================================
+   Parking fees (from the building's email) + pay via VietQR / Techcombank
+   ========================================================= */
+const vehName = v => v === 'bike' ? 'xe máy' : 'ô tô';
+const money = n => nf(n || 0) + ' đ';
+function noAccent(s) { return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').replace(/[^\x20-\x7e]/g, ''); }
+const unpaidFees = () => S.fees.filter(f => !f.paidAt).sort((a, b) => (a.due || '9').localeCompare(b.due || '9'));
+function dueInfo(f) {
+  if (!f.due) return { txt: '', cls: '' };
+  const left = daysBetween(Date.now(), parseISO(f.due));
+  if (left < 0) return { txt: `quá hạn ${-left} ngày`, cls: 'late' };
+  if (left === 0) return { txt: 'hạn hôm nay', cls: 'late' };
+  return { txt: `còn ${left} ngày`, cls: left <= 3 ? 'soon' : 'fine' };
+}
+function transferNote(f) {
+  const p = S.profile || {};
+  const apt = (p.apartment || '').trim(), plate = ((f.vehicle === 'bike' ? p.plateBike : p.plateCar) || '').trim();
+  const tpl = f.descTemplate || '[số căn hộ] đóng phí gửi xe tháng [...] cho xe [biển số]';
+  let t = tpl.replace(/\[\s*số căn hộ\s*\]/i, apt || '[số căn hộ]')
+    .replace(/\[\s*(?:…|\.\.\.|tháng)\s*\]/i, f.month || '')
+    .replace(/\[\s*biển số\s*\]/i, plate || '[biển số]');
+  return noAccent(t).replace(/\s+/g, ' ').trim();
+}
+function renderFees() {
+  const el = $('#fees'); if (!el) return;
+  const list = Sync.on ? unpaidFees() : [];
+  el.innerHTML = list.map(f => {
+    const d = dueInfo(f);
+    return `<button class="fee-card" data-id="${f.id}" style="--acc:var(--${f.vehicle === 'bike' ? 'bike' : 'car'})">
+      <span class="fee-top"><span>Phí gửi ${vehName(f.vehicle)}${f.month ? ' · tháng ' + esc(f.month) : ''}</span>${d.txt ? `<span class="pill ${d.cls}">${d.txt}</span>` : ''}</span>
+      <span class="fee-amt">${money(f.amount)}</span>
+      <span class="fee-sub">${f.due ? 'Hạn ' + fmtDate(parseISO(f.due)) + ' · ' : ''}Bấm để thanh toán</span></button>`;
+  }).join('');
+  $$('.fee-card', el).forEach(b => b.onclick = () => paySheet(S.fees.find(f => f.id === b.dataset.id)));
+}
+
+async function copyText(text, what) {
+  try { await navigator.clipboard.writeText(text); toast(`Đã chép ${what}`); }
+  catch { prompt(`Chép ${what}:`, text); }
+}
+async function setPaid(f, paid) {
+  f.paidAt = paid ? Date.now() : null;
+  await DB.put('fees', f);
+  const i = S.fees.findIndex(x => x.id === f.id); if (i >= 0) S.fees[i] = f;
+  render();
+}
+
+function paySheet(f) {
+  if (!f) return;
+  const note = transferNote(f);
+  const missing = /\[/.test(note);
+  const tcb = f.bankCode ? `https://dl.vietqr.io/pay?app=tcb&ba=${encodeURIComponent(f.accountNo + '@' + f.bankCode.toLowerCase())}&am=${f.amount}&tn=${encodeURIComponent(note)}&bn=${encodeURIComponent(noAccent(f.accountName))}` : '';
+  const d = dueInfo(f);
+  const body = h(`<div class="pay">
+    <div class="pay-amt">${money(f.amount)}</div>
+    <div class="pay-sub">${f.month ? 'Tháng ' + esc(f.month) : ''}${f.due ? ` · hạn ${fmtDate(parseISO(f.due))}` : ''}${d.txt && !f.paidAt ? ` · <span class="${d.cls}">${d.txt}</span>` : ''}</div>
+    ${f.paidAt ? `<div class="paid-box">✓ Đã thanh toán lúc ${fmtTime(f.paidAt)} ngày ${fmtDate(f.paidAt)}</div>` : ''}
+    <div class="lbl">Chuyển tới</div>
+    <div class="kv"><span>${esc(f.accountName || 'Ban quản lý')}</span><small>${esc(f.bank || '')}</small></div>
+    <div class="copy-row"><b>${esc(f.accountNo)}</b><button class="cp" data-c="acc">Chép</button></div>
+    <div class="copy-row"><b>${nf(f.amount)}</b><button class="cp" data-c="amt">Chép</button></div>
+    <div class="lbl">Nội dung chuyển khoản</div>
+    <textarea class="field note-in" rows="2">${esc(note)}</textarea>
+    ${missing ? `<div class="warn-line">Chưa có số căn hộ / biển số. <button class="link prof">Nhập một lần</button> để app tự điền.</div>` : ''}
+    <div class="btn-row mt"><button class="btn cp" data-c="note">Chép nội dung</button></div>
+    ${f.bin ? `<div class="qr-wrap"><img class="qr" alt="Mã VietQR"><small>Mã VietQR · Techcombank → Quét QR → chọn ảnh</small></div>` : ''}
+    ${tcb ? `<button class="btn primary mt tcb">Mở Techcombank</button>` : ''}
+    ${f.bin ? `<button class="btn mt saveqr">${IC.share}Lưu mã QR để quét</button>` : ''}
+    ${f.paidAt ? `<button class="btn danger mt unpaid">Bỏ đánh dấu đã trả</button>` : `<button class="btn mt paid" style="background:var(--ok);color:#fff">✓ Tôi đã chuyển khoản xong</button>`}
+    <div class="help mt">Techcombank không cho app ngoài tự trừ tiền, Ngài xác nhận chuyển khoản trong app Techcombank. Nếu nút "Mở Techcombank" không tự điền, dùng các nút Chép hoặc mã QR.</div>
+  </div>`);
+  const sh = openSheet({ title: `Phí gửi ${vehName(f.vehicle)}`, titleIcon: f.vehicle === 'bike' ? 'bike' : 'car', acc: f.vehicle === 'bike' ? 'bike' : 'car', body });
+  const cur = () => $('.note-in', body).value.trim();
+  const qrSrc = () => `api/fees/${encodeURIComponent(f.id)}/qr.png?tn=${encodeURIComponent(cur())}`;
+  const qr = $('.qr', body); if (qr) qr.src = qrSrc();
+  $('.note-in', body).addEventListener('change', () => { if (qr) qr.src = qrSrc(); });
+  $$('.cp', body).forEach(b => b.onclick = () => {
+    const c = b.dataset.c;
+    copyText(c === 'acc' ? f.accountNo : c === 'amt' ? String(f.amount) : cur(), c === 'acc' ? 'số tài khoản' : c === 'amt' ? 'số tiền' : 'nội dung');
+  });
+  $('.prof', body)?.addEventListener('click', () => { sh.close(); setTimeout(() => profileSheet(() => paySheet(S.fees.find(x => x.id === f.id))), 250); });
+  $('.tcb', body)?.addEventListener('click', () => {
+    copyText(cur(), 'nội dung');
+    window.open(tcb.replace(/tn=[^&]*/, 'tn=' + encodeURIComponent(cur())), '_blank');
+  });
+  $('.saveqr', body)?.addEventListener('click', async () => {
+    try {
+      const r = await fetch(qrSrc()); if (!r.ok) throw 0;
+      const file = new File([await r.blob()], `VietQR-${f.month.replace('/', '-') || 'phi'}.png`, { type: 'image/png' });
+      if (navigator.canShare?.({ files: [file] })) await navigator.share({ files: [file] });
+      else { const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; a.click(); }
+    } catch (e) { if (e?.name !== 'AbortError') toast('Chưa tải được mã QR (cần kết nối OMV)'); }
+  });
+  $('.paid', body)?.addEventListener('click', async () => { await setPaid(f, true); sh.close(); toast('Đã đánh dấu đã thanh toán'); });
+  $('.unpaid', body)?.addEventListener('click', async () => { await setPaid(f, false); sh.close(); });
+}
+
+function profileSheet(after) {
+  const p = { id: 'profile', ...(S.profile || {}) };
+  const body = h(`<div>
+    <div class="lbl">Số căn hộ</div><input class="field" name="apartment" placeholder="VD: S3-1203" autocomplete="off">
+    <div class="two"><div><div class="lbl">Biển số ô tô</div><input class="field" name="plateCar" placeholder="VD: 30A-123.45" autocomplete="off"></div>
+      <div><div class="lbl">Biển số xe máy</div><input class="field" name="plateBike" placeholder="VD: 29B1-234.56" autocomplete="off"></div></div>
+    <div class="help mt">Dùng để điền nội dung chuyển khoản theo mẫu của ban quản lý.</div>
+    <button class="btn primary mt save" style="--acc:var(--ink)">Lưu</button></div>`);
+  for (const k of ['apartment', 'plateCar', 'plateBike']) $(`[name=${k}]`, body).value = p[k] || '';
+  const sh = openSheet({ title: 'Thông tin căn hộ', body });
+  $('.save', body).onclick = async () => {
+    for (const k of ['apartment', 'plateCar', 'plateBike']) p[k] = $(`[name=${k}]`, body).value.trim();
+    await DB.put('prefs', p); S.profile = p; sh.close(); render(); toast('Đã lưu');
+    if (after) setTimeout(after, 250);
+  };
+}
+
+function b64uToBytes(s) { const b = atob(s.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((s.length + 3) % 4)); return Uint8Array.from(b, c => c.charCodeAt(0)); }
+async function pushState() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return 'unsupported';
+  if (Notification.permission === 'denied') return 'denied';
+  try { const reg = await navigator.serviceWorker.getRegistration(); return (await reg?.pushManager.getSubscription()) ? 'on' : 'off'; } catch { return 'off'; }
+}
+async function enablePush() {
+  const st = await pushState();
+  if (st === 'unsupported') { alert('Thông báo chỉ chạy khi mở app từ biểu tượng trên màn hình chính (iOS 16.4 trở lên).'); return false; }
+  if (st === 'denied') { alert('Ngài đã chặn thông báo. Vào Cài đặt iPhone → Thông báo → MyBike\'nCar để bật lại.'); return false; }
+  if (await Notification.requestPermission() !== 'granted') return false;
+  const reg = await navigator.serviceWorker.ready;
+  const { key } = await (await Sync.fetch('api/push/key')).json();
+  const sub = (await reg.pushManager.getSubscription()) || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uToBytes(key) });
+  const r = await Sync.fetch('api/push/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(sub.toJSON()) });
+  return r.ok;
+}
+
+function gmailSheet(info, after) {
+  const body = h(`<div>
+    <div class="help">Máy chủ OMV đọc Gmail (chỉ đọc, chỉ email của người gửi có chữ bên dưới) để tự nhận email báo phí gửi xe.</div>
+    <div class="lbl">Địa chỉ Gmail</div><input class="field" name="user" type="email" placeholder="ten@gmail.com" autocomplete="off" autocapitalize="off">
+    <div class="lbl">Mật khẩu ứng dụng <span class="opt">(16 chữ, không phải mật khẩu Gmail)</span></div>
+    <input class="field" name="password" type="password" placeholder="${info.configured ? 'Để trống nếu không đổi' : 'xxxx xxxx xxxx xxxx'}" autocomplete="off">
+    <div class="lbl">Người gửi có chữ</div><input class="field" name="keyword" placeholder="seasons" autocomplete="off" autocapitalize="off">
+    <div class="help mt"><b>Tạo mật khẩu ứng dụng:</b><ol><li>Tài khoản Google phải bật <b>Xác minh 2 bước</b>.</li><li>Mở <a href="https://myaccount.google.com/apppasswords" target="_blank">myaccount.google.com/apppasswords</a>.</li><li>Đặt tên "MyBikenCar" → <b>Tạo</b> → chép 16 chữ vào ô trên.</li></ol>Mật khẩu chỉ lưu trên máy OMV nhà, không lên GitHub. Muốn thu hồi thì xoá nó ở trang trên.</div>
+    <div class="err warn-line hidden"></div>
+    <button class="btn primary mt save" style="--acc:var(--ink)">Lưu và kiểm tra</button>
+    ${info.configured ? '<button class="btn danger dis">Ngắt kết nối Gmail</button>' : ''}</div>`);
+  $('[name=user]', body).value = info.user || '';
+  $('[name=keyword]', body).value = info.keyword || 'seasons';
+  const sh = openSheet({ title: 'Kết nối Gmail', body });
+  const err = $('.err', body);
+  $('.save', body).onclick = async () => {
+    const done = busy('Đang kiểm tra Gmail…');
+    try {
+      const r = await Sync.fetch('api/mail', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user: $('[name=user]', body).value.trim(), password: $('[name=password]', body).value, keyword: $('[name=keyword]', body).value.trim() }) }, 90000);
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.detail || r.status);
+      sh.close(); Sync.lastSig = ''; await Sync.run();
+      toast(j.lastError ? 'Đã kết nối, nhưng: ' + j.lastError : `Đã kết nối Gmail · tìm thấy ${j.lastFound || 0} email báo phí mới`);
+      if (after) setTimeout(after, 250);
+    } catch (e) { err.textContent = e.message === 'The user aborted a request.' ? 'Hết thời gian chờ, thử lại' : (e.message || 'Chưa kết nối được OMV'); err.classList.remove('hidden'); }
+    finally { done(); }
+  };
+  $('.dis', body)?.addEventListener('click', async () => {
+    if (!confirm('Ngắt kết nối Gmail? App sẽ không tự nhận email báo phí nữa.')) return;
+    await Sync.fetch('api/mail', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ disconnect: true }) });
+    sh.close(); if (after) setTimeout(after, 250);
+  });
+}
+
+async function feeCenter() {
+  const list = [...S.fees].sort((a, b) => (!!a.paidAt - !!b.paidAt) || (b.received || 0) - (a.received || 0));
+  const p = S.profile || {};
+  const body = h(`<div>
+    ${list.length ? `<div class="list">${list.map(f => `<button class="hrow" data-id="${f.id}" style="--acc:var(--${f.vehicle === 'bike' ? 'bike' : 'car'})">
+      <span class="hico">${icon(f.vehicle === 'bike' ? 'bike' : 'car')}</span>
+      <span class="hmain"><b>${money(f.amount)}</b><small>Phí gửi ${vehName(f.vehicle)}${f.month ? ' · tháng ' + esc(f.month) : ''}</small></span>
+      ${f.paidAt ? `<span class="pill fine">Đã trả ${fmtDate(f.paidAt)}</span>` : `<span class="pill ${dueInfo(f).cls || 'soon'}">Chưa trả</span>`}</button>`).join('')}</div>`
+      : `<div class="empty-state" style="padding:24px 8px">${icon('wallet')}Chưa có email báo phí nào.</div>`}
+    <div class="lbl">Cài đặt</div>
+    <button class="set-item prof">${IC.home}<span><b>Thông tin căn hộ</b><small>${p.apartment ? `Căn ${esc(p.apartment)}${p.plateCar ? ' · ô tô ' + esc(p.plateCar) : ''}${p.plateBike ? ' · xe máy ' + esc(p.plateBike) : ''}` : 'Số căn hộ, biển số để điền nội dung chuyển khoản'}</small></span></button>
+    <button class="set-item gm">${IC.mail}<span><b>Email báo phí (Gmail)</b><small class="gm-txt">Đang tải…</small></span></button>
+    <button class="set-item chk hidden">${IC.sync}<span><b>Kiểm tra email ngay</b><small>Bình thường máy chủ tự kiểm tra 10 phút một lần</small></span></button>
+    <button class="set-item ntf">${IC.bell}<span><b>Thông báo khi có phí mới</b><small class="ntf-txt">…</small></span></button>
+  </div>`);
+  const sh = openSheet({ title: 'Phí gửi xe', body });
+  $$('.hrow', body).forEach(b => b.onclick = () => { sh.close(); setTimeout(() => paySheet(S.fees.find(f => f.id === b.dataset.id)), 250); });
+  $('.prof', body).onclick = () => { sh.close(); setTimeout(() => profileSheet(feeCenter), 250); };
+  let info = {};
+  const showMail = () => {
+    const t = $('.gm-txt', body);
+    if (!info.configured) { t.innerHTML = '<b style="color:var(--bike)">Chưa kết nối</b> · bấm để kết nối'; return; }
+    $('.chk', body).classList.remove('hidden');
+    t.innerHTML = `${esc(info.user)}<br>${info.lastError ? `<span style="color:var(--warn)">${esc(info.lastError)}</span>` : `<span style="color:var(--ok)">Đang hoạt động</span>`}${info.lastCheck ? ` · kiểm tra lúc ${fmtTime(info.lastCheck)}` : ''}`;
+  };
+  Sync.fetch('api/mail', {}, 10000).then(r => r.json()).then(j => { info = j; showMail(); }).catch(() => { $('.gm-txt', body).textContent = 'Chưa kết nối được OMV'; });
+  $('.gm', body).onclick = () => { sh.close(); setTimeout(() => gmailSheet(info, feeCenter), 250); };
+  $('.chk', body).onclick = async () => {
+    const done = busy('Đang đọc Gmail…');
+    try { info = await (await Sync.fetch('api/mail/check', { method: 'POST' }, 90000)).json(); showMail(); Sync.lastSig = ''; await Sync.run();
+      toast(info.lastError ? info.lastError : info.lastFound ? `Tìm thấy ${info.lastFound} email báo phí mới` : 'Không có email báo phí mới'); }
+    catch { toast('Chưa kết nối được OMV'); } finally { done(); }
+  };
+  const showNtf = async () => {
+    const st = await pushState();
+    $('.ntf-txt', body).innerHTML = { on: '<span style="color:var(--ok)">Đã bật</span> · bấm để gửi thử', off: 'Bấm để bật thông báo trên iPhone', denied: 'Đã bị chặn trong Cài đặt iPhone', unsupported: 'Cần mở app từ màn hình chính' }[st];
+    return st;
+  };
+  showNtf();
+  $('.ntf', body).onclick = async () => {
+    try {
+      if (await pushState() === 'on') { const r = await (await Sync.fetch('api/push/test', { method: 'POST' })).json(); toast(r.sent ? 'Đã gửi thông báo thử' : 'Chưa gửi được, thử bật lại'); return; }
+      if (await enablePush()) toast('Đã bật thông báo');
+    } catch (e) { alert('Chưa bật được thông báo: ' + (e.message || e)); }
+    showNtf();
+  };
+}
+
+// Opened from a "new fee" notification: show the payment sheet straight away.
+function openFeeFromUrl(url) {
+  const id = new URL(url, location.href).searchParams.get('fee'); if (!id) return;
+  history.replaceState(null, '', location.pathname);
+  const f = S.fees.find(x => x.id === id);
+  if (f) paySheet(f); else if (Sync.on) feeCenter();
 }
 
 /* ---------- quick camera on home ---------- */
@@ -1018,6 +1275,7 @@ async function settings() {
     ${srv ? `<div class="lbl">Máy chủ OMV</div>
     <div class="set-item" style="cursor:default">${IC.cloud}<span><b>Đồng bộ</b><small id="syncLine">${syncText()}</small></span></div>
     <button class="set-item syncnow">${IC.sync}<span><b>Đồng bộ ngay</b><small>Gửi thay đổi và tải dữ liệu mới nhất từ OMV</small></span></button>
+    <button class="set-item fees">${IC.wallet}<span><b>Phí gửi xe</b><small>${unpaidFees().length ? `<b style="color:var(--warn)">${unpaidFees().length} khoản chưa trả</b>` : 'Email báo phí, thông tin căn hộ, thông báo'}</small></span></button>
     <div class="set-item upd" style="cursor:default;flex-wrap:wrap">${IC.download}<span style="flex:1"><b>Phiên bản ${esc(APP_VERSION)}</b><small class="upd-txt">Đang kiểm tra bản mới…</small></span>
       <button class="btn primary upd-btn" style="--acc:var(--ink);height:40px;width:auto;padding:0 14px;font-size:14px">Cập nhật ngay</button></div>
     <div class="lbl">Sao lưu</div>` : ''}
@@ -1033,6 +1291,7 @@ async function settings() {
   let pollT = null;
 
   if (srv) {
+    $('.fees', body).onclick = () => { sh.close(); setTimeout(feeCenter, 250); };
     $('.syncnow', body).onclick = async () => { Sync.lastSig = ''; await Sync.run(); paintSync(); toast(Sync.state === 'offline' ? 'Chưa kết nối được OMV' : 'Đã đồng bộ'); };
     const txt = $('.upd-txt', body), btn = $('.upd-btn', body);
     const showUpd = u => {
@@ -1153,7 +1412,13 @@ setInterval(() => { if (!document.hidden) Sync.kick(0); }, 60000);
   try { await DB.open(); await loadAll(); }
   catch (e) { alert('Không mở được bộ nhớ của app: ' + e.message); }
   render(); installHint(); paintSync();
-  Sync.detect().then(on => { Sync.on = on; paintSync(); if (on) Sync.kick(0); });
+  Sync.detect().then(async on => {
+    Sync.on = on; paintSync();
+    if (!on) return;
+    await Sync.run();
+    openFeeFromUrl(location.href);
+  });
+  navigator.serviceWorker?.addEventListener('message', e => { if (e.data?.type === 'open') { Sync.lastSig = ''; Sync.run().then(() => openFeeFromUrl(e.data.url)); } });
   try { navigator.storage?.persist?.(); } catch {}
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
     // When a new version is published, the new service worker takes over and the app reloads itself once.

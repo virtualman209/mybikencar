@@ -27,6 +27,13 @@ Cuối cùng script in ra địa chỉ dạng `https://vmminipc.<tên-tailnet>.t
 
 Chấm nhỏ trên nút ⚙︎: xanh = đã đồng bộ, cam = có thay đổi chờ gửi, xám = chưa kết nối được OMV (dữ liệu vẫn lưu trên máy).
 
+## Phí gửi xe (từ v1.1.0)
+
+1. ⚙︎ → **Phí gửi xe** → **Thông tin căn hộ**: nhập số căn hộ, biển số (để điền nội dung chuyển khoản).
+2. **Email báo phí (Gmail)**: nhập Gmail + **mật khẩu ứng dụng** (tạo ở myaccount.google.com/apppasswords, cần bật Xác minh 2 bước). Máy chủ đọc Gmail 10 phút một lần, chỉ đọc email của người gửi có chữ "seasons".
+3. **Thông báo khi có phí mới**: bấm để bật (phải mở app từ màn hình chính).
+4. Có phí mới thì trang chủ hiện thẻ đỏ. Bấm vào → chép STK / nội dung, hoặc **Mở Techcombank**, hoặc lưu mã VietQR rồi quét trong Techcombank. Chuyển xong bấm **Tôi đã chuyển khoản xong**.
+
 ## Lệnh SSH
 
 | Việc | Lệnh |

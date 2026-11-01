@@ -19,6 +19,8 @@ from urllib.parse import urlparse
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 
+import feemail
+
 DATA = Path(os.environ.get("DATA_DIR", "/app/data"))
 BACKUP = Path(os.environ.get("BACKUP_DIR", "/backup"))
 STATIC = Path(os.environ.get("STATIC_DIR", str(Path(__file__).parent / "static")))
@@ -29,7 +31,7 @@ REPO_RAW = os.environ.get("REPO_RAW", "https://raw.githubusercontent.com/virtual
 KEEP_BACKUPS = 30
 MAX_PHOTO = 25 * 1024 * 1024
 VN = timezone(timedelta(hours=7))
-STORES = ("parkings", "maint")
+STORES = ("parkings", "maint", "fees", "prefs")
 ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 STATIC_FILES = {"index.html", "sw.js", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"}
 
@@ -322,6 +324,201 @@ def request_update():
     # update.sh trên máy OMV (chạy ngoài container, qua systemd) nhận tệp này rồi kéo bản mới từ GitHub.
     write_file(REQ / "update.req", datetime.now(VN).isoformat().encode())
     return {"ok": True}
+
+
+
+# ---------------------------------------------------------------- fees: Gmail + VietQR + push
+MAIL_CFG = DATA / "mail.json"
+PUSH_CFG = DATA / "push.json"
+VAPID_KEY = DATA / "vapid_private.pem"
+_mail_lock = threading.Lock()
+_mail_wake = threading.Event()
+
+
+def read_json(path: Path, default):
+    try:
+        return json.loads(path.read_text("utf-8"))
+    except (OSError, ValueError):
+        return default
+
+
+def write_json(path: Path, obj):
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(obj, ensure_ascii=False, indent=1), "utf-8")
+    os.chmod(tmp, 0o600)
+    os.replace(tmp, path)
+
+
+def mail_public(cfg: dict) -> dict:
+    return {k: cfg.get(k) for k in ("user", "keyword", "lastCheck", "lastError", "lastFound")} | {"configured": bool(cfg.get("user") and cfg.get("password"))}
+
+
+def mail_error(e: Exception) -> str:
+    msg = str(e)
+    if any(x in msg for x in ("AUTHENTICATIONFAILED", "Invalid credentials", "Application-specific", "LOGIN failed")):
+        return "Gmail từ chối: sai email hoặc mật khẩu ứng dụng"
+    if isinstance(e, OSError):
+        return "Máy chủ OMV chưa kết nối được tới Gmail (mạng / DNS)"
+    return msg[:200]
+
+
+def check_mail_now() -> dict:
+    """Đọc Gmail, thêm phí mới vào DB, gửi thông báo. Trả về trạng thái."""
+    with _mail_lock:
+        cfg = read_json(MAIL_CFG, {})
+        if not (cfg.get("user") and cfg.get("password")):
+            return mail_public(cfg)
+        seen = set(cfg.get("seen") or [])
+        try:
+            new = feemail.fetch_fees(cfg["user"], cfg["password"], cfg.get("keyword", "seasons"), seen)
+            for fee in new:
+                exists = q("SELECT 1 FROM records WHERE store='fees' AND id=?", (fee["id"],))
+                if not exists:
+                    save_record("fees", fee)
+                    notify_fee(fee)
+                seen.add(fee["id"])
+            cfg.update(lastCheck=int(time.time() * 1000), lastError=None, lastFound=len(new), seen=sorted(seen)[-500:])
+        except Exception as e:  # noqa: BLE001
+            msg = mail_error(e)
+            cfg.update(lastCheck=int(time.time() * 1000), lastError=msg[:200])
+        write_json(MAIL_CFG, cfg)
+        return mail_public(cfg)
+
+
+def mail_loop():
+    while True:
+        try:
+            check_mail_now()
+        except Exception as e:  # noqa: BLE001
+            print("mail error:", e)
+        _mail_wake.wait(600)  # 10 phút một lần, hoặc ngay khi được gọi
+        _mail_wake.clear()
+
+
+threading.Thread(target=mail_loop, daemon=True).start()
+
+
+@app.get("/api/mail")
+def get_mail():
+    return mail_public(read_json(MAIL_CFG, {}))
+
+
+@app.post("/api/mail")
+async def set_mail(request: Request):
+    if "application/json" not in (request.headers.get("content-type") or ""):
+        raise HTTPException(415)
+    body = await request.json()
+    cfg = read_json(MAIL_CFG, {})
+    if body.get("disconnect"):
+        cfg.pop("password", None)
+        cfg["user"] = ""
+        write_json(MAIL_CFG, cfg)
+        return mail_public(cfg)
+    user = (body.get("user") or "").strip()
+    password = re.sub(r"\s", "", body.get("password") or "") or cfg.get("password", "")
+    if not user or not password:
+        raise HTTPException(400, "Nhập email và mật khẩu ứng dụng")
+    try:
+        feemail.test_login(user, password)
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(400, mail_error(e))
+    cfg.update(user=user, password=password, keyword=(body.get("keyword") or cfg.get("keyword") or "seasons").strip(), lastError=None)
+    write_json(MAIL_CFG, cfg)
+    return check_mail_now()
+
+
+@app.post("/api/mail/check")
+def mail_check():
+    return check_mail_now()
+
+
+@app.get("/api/fees/{fid}/qr.png")
+def fee_qr(fid: str, tn: str = ""):
+    rows = q("SELECT data FROM records WHERE store='fees' AND id=?", (check_id(fid),))
+    if not rows:
+        raise HTTPException(404)
+    fee = json.loads(rows[0]["data"])
+    if not fee.get("bin"):
+        raise HTTPException(400, "Không rõ ngân hàng nhận")
+    import io
+    import qrcode
+    import qrcode.image.pure
+    img = qrcode.make(feemail.vietqr_payload(fee["bin"], fee["accountNo"], fee.get("amount") or 0, tn),
+                      image_factory=qrcode.image.pure.PyPNGImage, box_size=10, border=3)
+    buf = io.BytesIO()
+    img.save(buf)
+    return Response(buf.getvalue(), media_type="image/png", headers={"Cache-Control": "no-store"})
+
+
+# ---- web push (thông báo trên iPhone khi có phí mới)
+def vapid():
+    from cryptography.hazmat.primitives import serialization
+    from py_vapid import Vapid
+    if not VAPID_KEY.exists():
+        v = Vapid()
+        v.generate_keys()
+        v.save_key(str(VAPID_KEY))
+        os.chmod(VAPID_KEY, 0o600)
+    v = Vapid.from_file(str(VAPID_KEY))
+    pub = v.public_key.public_bytes(serialization.Encoding.X962, serialization.PublicFormat.UncompressedPoint)
+    return base64.urlsafe_b64encode(pub).decode().rstrip("=")
+
+
+def send_push(payload: dict) -> int:
+    from pywebpush import WebPushException, webpush
+    subs = read_json(PUSH_CFG, [])
+    keep, sent = [], 0
+    for sub in subs:
+        try:
+            webpush(subscription_info=sub, data=json.dumps(payload, ensure_ascii=False), vapid_private_key=str(VAPID_KEY),
+                    vapid_claims={"sub": "https://virtualman209.github.io"}, ttl=86400, timeout=15)
+            sent += 1
+            keep.append(sub)
+        except WebPushException as e:
+            code = getattr(e.response, "status_code", None)
+            if code not in (404, 410):  # 404/410 = iPhone đã huỷ đăng ký
+                keep.append(sub)
+            print("push error:", code, e)
+        except Exception as e:  # noqa: BLE001
+            keep.append(sub)
+            print("push error:", e)
+    if len(keep) != len(subs):
+        write_json(PUSH_CFG, keep)
+    return sent
+
+
+def notify_fee(fee: dict):
+    veh = "ô tô" if fee.get("vehicle") == "car" else "xe máy"
+    due = fee.get("due") or ""
+    due_txt = f" · hạn {due[8:10]}/{due[5:7]}" if len(due) == 10 else ""
+    try:
+        send_push({"title": f"Phí gửi {veh}" + (f" tháng {fee['month']}" if fee.get("month") else ""),
+                   "body": f"{fee['amount']:,} đ".replace(",", ".") + due_txt + " · Bấm để thanh toán",
+                   "url": f"./?fee={fee['id']}", "tag": fee["id"]})
+    except Exception as e:  # noqa: BLE001
+        print("notify error:", e)
+
+
+@app.get("/api/push/key")
+def push_key():
+    return {"key": vapid(), "count": len(read_json(PUSH_CFG, []))}
+
+
+@app.post("/api/push/subscribe")
+async def push_subscribe(request: Request):
+    sub = await request.json()
+    if not isinstance(sub, dict) or not str(sub.get("endpoint", "")).startswith("https://"):
+        raise HTTPException(400)
+    vapid()
+    subs = [s for s in read_json(PUSH_CFG, []) if s.get("endpoint") != sub["endpoint"]]
+    subs.append({"endpoint": sub["endpoint"], "keys": sub.get("keys", {})})
+    write_json(PUSH_CFG, subs)
+    return {"ok": True, "count": len(subs)}
+
+
+@app.post("/api/push/test")
+def push_test():
+    return {"sent": send_push({"title": "MyBike'nCar", "body": "Thông báo đã hoạt động ✓", "url": "./"})}
 
 
 # ---------------------------------------------------------------- static app

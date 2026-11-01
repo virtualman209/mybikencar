@@ -1,5 +1,5 @@
 // MyBike'nCar – offline cache. Bump VERSION whenever any app file changes (same as APP_VERSION in index.html).
-const VERSION = 'mybikencar-v1.0.0';
+const VERSION = 'mybikencar-v1.1.0';
 const PHOTO_CACHE = 'mybikencar-photos';  // photos from the OMV server; kept across versions
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 
@@ -35,5 +35,22 @@ self.addEventListener('fetch', e => {
     const net = fetch(req).then(res => { if (res.ok) cache.put(req, res.clone()); return res; }).catch(() => null);
     if (hit) { e.waitUntil(net); return hit; }
     return (await net) || new Response('Offline', { status: 503 });
+  }));
+});
+
+// "New parking fee" notifications from the OMV server.
+self.addEventListener('push', e => {
+  let d = {};
+  try { d = e.data.json(); } catch { d = { body: e.data ? e.data.text() : '' }; }
+  e.waitUntil(self.registration.showNotification(d.title || "MyBike'nCar", {
+    body: d.body || '', tag: d.tag, icon: 'icon-192.png', badge: 'icon-192.png', data: { url: d.url || './' },
+  }));
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const url = new URL((e.notification.data && e.notification.data.url) || './', self.registration.scope).href;
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+    for (const c of list) { c.postMessage({ type: 'open', url }); return c.focus(); }
+    return self.clients.openWindow(url);
   }));
 });
