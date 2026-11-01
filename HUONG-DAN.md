@@ -33,7 +33,7 @@ Chấm nhỏ trên nút ⚙︎: xanh = đã đồng bộ, cam = có thay đổi 
 2. **Email báo phí (Gmail)** – cách không cần mật khẩu (từ v1.2.0): trên máy tính mở `http://192.168.50.231:8096/gmail` và làm theo 7 bước (Google Apps Script, quyền chỉ xem email). Hoặc cách 2: Gmail + mật khẩu ứng dụng. Máy chủ kiểm tra 10 phút một lần, chỉ lấy email của người gửi có chữ "seasons".
 3. **Thông báo khi có phí mới**: bấm để bật (phải mở app từ màn hình chính).
 4. Có phí mới thì trang chủ hiện thẻ đỏ. Bấm vào → **1 Lưu mã QR vào Ảnh** → **2 Mở Techcombank** → Quét QR → chọn ảnh mã vừa lưu (tự điền STK, số tiền, nội dung). Hoặc dùng các nút Chép. Chuyển xong bấm **Tôi đã chuyển khoản xong**.
-5. Tự xoá ảnh QR (từ v1.4.0): ⚙︎ → **Phí gửi xe** → **Tự xoá ảnh QR sau khi trả** → làm theo hướng dẫn tạo album `QR phi xe` và 2 Phím tắt `QR phi xe`, `Xoa QR phi xe`. Khi bật, nút thanh toán chỉ còn một bước; bấm "đã chuyển khoản" thì ảnh QR bị xoá (iPhone hỏi xác nhận).
+5. Trả nhanh (từ v1.5.0): ⚙︎ → **Phí gửi xe** → **Trả nhanh bằng Phím tắt** → tạo album `QR phi xe` và 1 Phím tắt `QR phi xe` theo hướng dẫn. Khi bật, chỉ cần bấm **Lưu QR & mở Techcombank**; Phím tắt tự xoá mã QR cũ (iPhone hỏi xác nhận), lưu mã mới, mở Techcombank → Quét QR → chọn ảnh.
 
 ## Lệnh SSH
 

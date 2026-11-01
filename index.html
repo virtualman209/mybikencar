@@ -66,17 +66,17 @@ svg{display:block}
 
 .vehicles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
 .veh{display:flex;flex-direction:column;align-items:center;gap:8px}
-.ring{width:min(120px,32vw);aspect-ratio:1;border-radius:50%;border:5px solid var(--line);display:grid;place-items:center;
-  background:var(--card);transition:transform .12s ease,box-shadow .12s ease;box-shadow:0 3px 0 var(--line)}
+.ring{width:min(120px,32vw);aspect-ratio:1;border-radius:50%;border:2.5px solid var(--line);display:grid;place-items:center;
+  background:var(--card);transition:transform .12s ease,box-shadow .12s ease;box-shadow:0 1.5px 0 var(--line)}
 .ring svg{width:58%;height:auto}
-.veh:active .ring{transform:translateY(3px);box-shadow:0 0 0 var(--line)}
+.veh:active .ring{transform:translateY(1.5px);box-shadow:0 0 0 var(--line)}
 .veh-l{font-weight:700;font-size:15px}
 .veh-s{font-size:12px;color:var(--muted);margin-top:-6px}
 
-.status{margin-top:16px;background:var(--card);border:2.5px solid var(--line);border-radius:var(--r);padding:6px 6px}
+.status{margin-top:16px;background:var(--card);border:1.25px solid var(--line);border-radius:var(--r);padding:6px 6px}
 .srow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 10px;border-radius:12px}
 .srow:active{background:var(--soft2)}
-.srow+.srow{border-top:1.5px dashed var(--soft)}
+.srow+.srow{border-top:1px dashed var(--soft)}
 .srow .when{font-size:13px;color:var(--muted)}
 .srow .what{font-size:19px;line-height:1.3;font-weight:500;letter-spacing:-.2px}
 .srow .what b{font-weight:700;color:var(--acc)}
@@ -89,16 +89,16 @@ svg{display:block}
 .plan .seg{cursor:pointer}
 .plan .cap{position:absolute;left:4px;bottom:4px;font-size:13px;color:var(--muted)}
 .plan .cap b{color:var(--ink);font-weight:600}
-.cam{position:absolute;right:0;bottom:-6px;width:84px;height:84px;border-radius:50%;border:5px solid var(--line);background:var(--card);
-  display:grid;place-items:center;box-shadow:0 3px 0 var(--line);transition:transform .12s,box-shadow .12s}
-.cam:active{transform:translateY(3px);box-shadow:0 0 0 var(--line)}
+.cam{position:absolute;right:0;bottom:-6px;width:84px;height:84px;border-radius:50%;border:2.5px solid var(--line);background:var(--card);
+  display:grid;place-items:center;box-shadow:0 1.5px 0 var(--line);transition:transform .12s,box-shadow .12s}
+.cam:active{transform:translateY(1.5px);box-shadow:0 0 0 var(--line)}
 .cam svg{width:44px}
 
 .nav{margin-top:auto;padding-top:26px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.nav button{border:3px solid var(--line);background:var(--card);border-radius:10px;min-height:78px;padding:8px 6px;
+.nav button{border:1.5px solid var(--line);background:var(--card);border-radius:10px;min-height:78px;padding:8px 6px;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:14px;font-weight:600;line-height:1.15;text-align:center;
-  box-shadow:0 3px 0 var(--line);transition:transform .12s,box-shadow .12s}
-.nav button:active{transform:translateY(3px);box-shadow:0 0 0 var(--line)}
+  box-shadow:0 1.5px 0 var(--line);transition:transform .12s,box-shadow .12s}
+.nav button:active{transform:translateY(1.5px);box-shadow:0 0 0 var(--line)}
 .nav svg{width:24px;height:24px}
 .nav .badge{font-size:11px;font-weight:600;color:var(--muted)}
 
@@ -141,7 +141,7 @@ svg{display:block}
 .hrow img{width:48px;height:48px;border-radius:9px;object-fit:cover;flex:none}
 
 /* maintenance */
-.mcard{background:var(--card);border:2.5px solid var(--line);border-radius:var(--r);padding:16px}
+.mcard{background:var(--card);border:1.25px solid var(--line);border-radius:var(--r);padding:16px}
 .mcard .k{font-size:13px;color:var(--muted);font-weight:600}
 .mcard .big{font-size:30px;font-weight:800;letter-spacing:-.6px;line-height:1.1;margin-top:2px;color:var(--acc)}
 .mcard .sub{font-size:15px;margin-top:4px}
@@ -244,8 +244,8 @@ textarea.field{min-height:84px;resize:vertical}
 /* fees */
 #fees:empty{display:none}
 #fees{display:flex;flex-direction:column;gap:10px;margin-top:14px}
-.fee-card{display:block;text-align:left;width:100%;background:var(--card);border:2.5px solid var(--acc);border-radius:var(--r);padding:12px 14px;box-shadow:0 3px 0 var(--acc);transition:transform .12s,box-shadow .12s}
-.fee-card:active{transform:translateY(3px);box-shadow:0 0 0 var(--acc)}
+.fee-card{display:block;text-align:left;width:100%;background:var(--card);border:1.25px solid var(--acc);border-radius:var(--r);padding:12px 14px;box-shadow:0 1.5px 0 var(--acc);transition:transform .12s,box-shadow .12s}
+.fee-card:active{transform:translateY(1.5px);box-shadow:0 0 0 var(--acc)}
 .fee-top{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:.3px}
 .fee-amt{display:block;font-size:28px;font-weight:850;letter-spacing:-.6px;margin-top:2px}
 .fee-sub{display:block;font-size:14px;color:var(--muted)}
@@ -368,28 +368,28 @@ const monthKey = ts => { const d = new Date(ts); return `${MONTHS[d.getMonth()]}
    Icons
    ========================================================= */
 const IC = {
-  bike: `<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="31" r="8.5"/><circle cx="51" cy="31" r="8.5"/><path d="M13 31l8-10h20l4-9"/><path d="M45 12l6 19"/><path d="M40 9h8"/><path d="M17 21c2-6 6-8 12-8h9l3 8" fill="currentColor"/><path d="M27 21l4 10h11"/></svg>`,
-  car: `<svg viewBox="0 0 64 40" fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 29v-7.4c0-1.6 1.1-3 2.7-3.3L17 16.6l7.2-8.4c.8-.9 1.9-1.4 3.1-1.4h12.3c1.2 0 2.3.5 3.1 1.4l7.4 8.4 4.7 1.3c1.5.4 2.6 1.8 2.6 3.4V29"/><path d="M6 29h6.5M23.5 29h17M51.5 29H58"/><circle cx="18" cy="29.5" r="5.5"/><circle cx="46" cy="29.5" r="5.5"/></svg>`,
-  camera: `<svg viewBox="0 0 48 40" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"><path d="M5 12a3 3 0 0 1 3-3h7l3.5-5h11L33 9h7a3 3 0 0 1 3 3v21a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3z"/><circle cx="24" cy="21.5" r="7.5"/><circle cx="36.5" cy="15" r="1.6" fill="currentColor" stroke="none"/></svg>`,
-  image: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="9" cy="10" r="1.8"/><path d="m21 16-5-5-9 9"/></svg>`,
-  clock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>`,
-  wrench: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L3.5 17.3a1.8 1.8 0 0 0 2.5 2.5l5.8-5.8a4 4 0 0 0 5.2-5.4l-2.6 2.6-2.4-.5-.5-2.4z"/></svg>`,
+  bike: `<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="31" r="8.5"/><circle cx="51" cy="31" r="8.5"/><path d="M13 31l8-10h20l4-9"/><path d="M45 12l6 19"/><path d="M40 9h8"/><path d="M17 21c2-6 6-8 12-8h9l3 8" fill="currentColor"/><path d="M27 21l4 10h11"/></svg>`,
+  car: `<svg viewBox="0 0 64 40" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 29v-7.4c0-1.6 1.1-3 2.7-3.3L17 16.6l7.2-8.4c.8-.9 1.9-1.4 3.1-1.4h12.3c1.2 0 2.3.5 3.1 1.4l7.4 8.4 4.7 1.3c1.5.4 2.6 1.8 2.6 3.4V29"/><path d="M6 29h6.5M23.5 29h17M51.5 29H58"/><circle cx="18" cy="29.5" r="5.5"/><circle cx="46" cy="29.5" r="5.5"/></svg>`,
+  camera: `<svg viewBox="0 0 48 40" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M5 12a3 3 0 0 1 3-3h7l3.5-5h11L33 9h7a3 3 0 0 1 3 3v21a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3z"/><circle cx="24" cy="21.5" r="7.5"/><circle cx="36.5" cy="15" r="1.6" fill="currentColor" stroke="none"/></svg>`,
+  image: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="9" cy="10" r="1.8"/><path d="m21 16-5-5-9 9"/></svg>`,
+  clock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>`,
+  wrench: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L3.5 17.3a1.8 1.8 0 0 0 2.5 2.5l5.8-5.8a4 4 0 0 0 5.2-5.4l-2.6 2.6-2.4-.5-.5-2.4z"/></svg>`,
   gear: `<svg viewBox="0 0 24 24" width="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>`,
   back: `<svg viewBox="0 0 24 24" width="26" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg>`,
   x: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>`,
   plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>`,
-  share: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>`,
-  trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>`,
-  download: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 19h14"/></svg>`,
-  upload: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 19h14"/></svg>`,
-  cloud: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h10.5a4 4 0 0 0 .6-7.96A6 6 0 0 0 6.3 9.5 4.3 4.3 0 0 0 7 18z"/></svg>`,
-  sync: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4"/></svg>`,
-  wallet: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2.5"/><path d="M3 10h18M16 15h2"/><path d="M6 6V5a2 2 0 0 1 2-2h8"/></svg>`,
-  home: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5 12 4l8 6.5V20H4z"/><path d="M10 20v-5h4v5"/></svg>`,
-  mail: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m4 7 8 6 8-6"/></svg>`,
-  bell: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>`,
-  disk: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>`,
-  shareIOS: `<svg viewBox="0 0 24 24" width="18" style="display:inline;vertical-align:-3px" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5v10h14V11h-1"/></svg>`,
+  share: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>`,
+  trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>`,
+  download: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 19h14"/></svg>`,
+  upload: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 19h14"/></svg>`,
+  cloud: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h10.5a4 4 0 0 0 .6-7.96A6 6 0 0 0 6.3 9.5 4.3 4.3 0 0 0 7 18z"/></svg>`,
+  sync: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4"/></svg>`,
+  wallet: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2.5"/><path d="M3 10h18M16 15h2"/><path d="M6 6V5a2 2 0 0 1 2-2h8"/></svg>`,
+  home: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5 12 4l8 6.5V20H4z"/><path d="M10 20v-5h4v5"/></svg>`,
+  mail: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m4 7 8 6 8-6"/></svg>`,
+  bell: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>`,
+  disk: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>`,
+  shareIOS: `<svg viewBox="0 0 24 24" width="18" style="display:inline;vertical-align:-3px" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5v10h14V11h-1"/></svg>`,
 };
 const icon = n => IC[n] || '';
 $$('[data-icon]').forEach(el => el.innerHTML = icon(el.dataset.icon));
@@ -399,7 +399,7 @@ $('#btnSettings .g').innerHTML = IC.gear;
    Config: Seasons Avenue
    ========================================================= */
 /* App version – keep in sync with VERSION in sw.js */
-const APP_VERSION = 'v1.4.0';
+const APP_VERSION = 'v1.5.0';
 
 const VEH = {
   bike: { name: 'Xe máy', floors: ['M', '2', '3', '4'], zones: f => f === 'M' ? ['S1', 'S2', 'S3', 'S4', 'EV'] : ['S1', 'S2', 'S3', 'S4'] },
@@ -725,17 +725,17 @@ function renderPlan() {
         font-size="11.5" font-weight="800" letter-spacing=".6" fill="${on ? '#fff' : mid ? 'var(--muted)' : 'var(--ink)'}">${label}</text></g>`;
   }
   // outlines (heavy like the sketch)
-  const ol = `<g fill="none" stroke="var(--line)" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round" pointer-events="none">
+  const ol = `<g fill="none" stroke="var(--line)" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" pointer-events="none">
       <polygon points="${pts([P(0, 0), P(1, 0), P(1, 1), P(0, 1)])}"/>
       <polyline points="${pts([P(0, 0), P(0, 0, 1), P(0, 1, 1), P(1, 1, 1), P(1, 1)])}"/>
       <line x1="${P(0, 1)[0]}" y1="${P(0, 1)[1]}" x2="${P(0, 1, 1)[0]}" y2="${P(0, 1, 1)[1]}"/>
-      ${[.36, .63].map(t => `<polyline points="${pts([P(t, 0), P(t, 1), P(t, 1, 1)])}" stroke-width="2.4"/>`).join('')}
+      ${[.36, .63].map(t => `<polyline points="${pts([P(t, 0), P(t, 1), P(t, 1, 1)])}" stroke-width="1.2"/>`).join('')}
     </g>`;
   let pin = '';
   if (hi) {
     const t = { cuoi: .18, giua: .495, dau: .815 }[hi]; const c = P(t, .5);
     pin = `<g transform="translate(${c[0]} ${c[1] - 6})" pointer-events="none">
-      <path d="M0 0c-6-9-12-13-12-20a12 12 0 0 1 24 0c0 7-6 11-12 20z" fill="var(--car)" stroke="var(--line)" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M0 0c-6-9-12-13-12-20a12 12 0 0 1 24 0c0 7-6 11-12 20z" fill="var(--car)" stroke="var(--line)" stroke-width="1.3" stroke-linejoin="round"/>
       <circle cx="0" cy="-20" r="4.2" fill="#fff"/></g>`;
   }
   $('#plan').innerHTML = `<svg viewBox="0 0 320 136" role="img" aria-label="Sơ đồ tầng Seasons Avenue">${svg}${ol}${pin}</svg>
@@ -825,7 +825,7 @@ function paySheet(f) {
     ${f.bin && useShortcuts() ? `<div class="lbl">Trả bằng Techcombank</div>
     <div class="paysteps">
       <button class="btn primary sc-pay" style="justify-content:center">Lưu QR &amp; mở Techcombank</button>
-      <small>Phím tắt lưu mã vào album <b>${SC_ALBUM}</b> rồi mở Techcombank. Trong Techcombank: <b>Quét QR</b> → biểu tượng <b>ảnh</b> → chọn mã vừa lưu → xác nhận. Quay lại đây bấm nút xanh, ảnh QR sẽ được xoá.</small>
+      <small>Trong Techcombank: <b>Quét QR</b> → biểu tượng <b>ảnh</b> → chọn mã mới nhất → xác nhận. Mã QR cũ tự bị xoá ở lần trả sau.</small>
     </div>
     <div class="qr-wrap"><img class="qr" alt="Mã VietQR"><small>Mã VietQR (quét được bằng điện thoại khác)</small></div>` : ''}
     ${f.bin && !useShortcuts() ? `<div class="lbl">Trả bằng Techcombank · 2 bước</div>
@@ -833,10 +833,10 @@ function paySheet(f) {
       <button class="btn primary saveqr"><span class="stepn">1</span>Lưu mã QR vào Ảnh</button>
       <small>Bảng chia sẻ hiện lên → chọn <b>Lưu hình ảnh</b>.</small>
       <button class="btn primary tcb"><span class="stepn">2</span>Mở Techcombank</button>
-      <small>Trong Techcombank: <b>Quét QR</b> → biểu tượng <b>ảnh</b> → chọn mã vừa lưu. Số tài khoản, số tiền, nội dung tự điền sẵn, Ngài chỉ cần xác nhận. Muốn app tự xoá ảnh QR sau khi trả: <button class="link sc-setup">cài Phím tắt</button>.</small>
+      <small>Trong Techcombank: <b>Quét QR</b> → biểu tượng <b>ảnh</b> → chọn mã vừa lưu. Số tài khoản, số tiền, nội dung tự điền sẵn, Ngài chỉ cần xác nhận. Muốn trả bằng 1 nút và tự xoá mã QR: <button class="link sc-setup">cài Phím tắt</button>.</small>
     </div>
     <div class="qr-wrap"><img class="qr" alt="Mã VietQR"><small>Mã VietQR (quét được bằng điện thoại khác)</small></div>` : ''}
-    ${f.paidAt ? `<button class="btn danger mt unpaid">Bỏ đánh dấu đã trả</button>` : `<button class="btn mt paid" style="background:var(--ok);color:#fff">✓ Tôi đã chuyển khoản xong${useShortcuts() ? ' · xoá ảnh QR' : ''}</button>`}
+    ${f.paidAt ? `<button class="btn danger mt unpaid">Bỏ đánh dấu đã trả</button>` : `<button class="btn mt paid" style="background:var(--ok);color:#fff">✓ Tôi đã chuyển khoản xong</button>`}
     <div class="help mt">Techcombank không cho app khác mở thẳng màn hình chuyển tiền, nên app dùng mã QR để Techcombank tự điền thông tin.</div>
   </div>`);
   const sh = openSheet({ title: `Phí gửi ${vehName(f.vehicle)}`, titleIcon: f.vehicle === 'bike' ? 'bike' : 'car', acc: f.vehicle === 'bike' ? 'bike' : 'car', body });
@@ -873,15 +873,14 @@ function paySheet(f) {
   $('.sc-setup', body)?.addEventListener('click', () => { sh.close(); setTimeout(() => shortcutSheet(() => paySheet(S.fees.find(x => x.id === f.id))), 250); });
   $('.paid', body)?.addEventListener('click', async () => {
     await setPaid(f, true); sh.close();
-    if (useShortcuts()) { toast('Đã đánh dấu đã trả · đang xoá ảnh QR'); setTimeout(() => runShortcut(SC_DELETE), 400); }
-    else toast('Đã đánh dấu đã trả · nhớ xoá ảnh mã QR trong Ảnh');
+    toast(useShortcuts() ? 'Đã đánh dấu đã trả' : 'Đã đánh dấu đã trả · nhớ xoá ảnh mã QR trong Ảnh');
   });
   $('.unpaid', body)?.addEventListener('click', async () => { await setPaid(f, false); sh.close(); });
 }
 
-/* Apple không cho web app xoá ảnh trong Thư viện. Phím tắt (Shortcuts) của iPhone thì làm được:
-   "QR phi xe" lưu mã vào album riêng rồi mở Techcombank, "Xoa QR phi xe" xoá cả album đó (iPhone hỏi xác nhận 1 lần). */
-const SC_SAVE = 'QR phi xe', SC_DELETE = 'Xoa QR phi xe', SC_ALBUM = 'QR phi xe';
+/* Apple không cho web app xoá ảnh trong Thư viện. Một Phím tắt (Shortcuts) của iPhone làm thay:
+   "QR phi xe" xoá mã QR cũ trong album riêng, lưu mã mới vào đó rồi mở Techcombank. */
+const SC_SAVE = 'QR phi xe', SC_ALBUM = 'QR phi xe';
 const useShortcuts = () => !!(S.profile && S.profile.shortcuts);
 function runShortcut(name, text) {
   let url = 'shortcuts://run-shortcut?name=' + encodeURIComponent(name);
@@ -891,34 +890,29 @@ function runShortcut(name, text) {
 function shortcutSheet(after) {
   const on = useShortcuts();
   const body = h(`<div class="sc">
-    <div class="help">iPhone không cho web app tự xoá ảnh. Hai <b>Phím tắt</b> nhỏ của Apple làm việc đó thay app: lưu mã QR vào album riêng, mở Techcombank, và xoá album đó sau khi Ngài bấm "đã chuyển khoản". Làm một lần, khoảng 5 phút.</div>
+    <div class="help">iPhone không cho web app tự lưu hay xoá ảnh. Một <b>Phím tắt</b> của Apple làm thay: mỗi lần trả phí nó <b>xoá mã QR cũ</b>, lưu mã mới vào album riêng rồi <b>mở Techcombank</b>. Ngài chỉ bấm 1 nút trong app. Cài một lần, khoảng 5 phút.</div>
     <div class="lbl">Bước 1 · Tạo album</div>
-    <ol class="sc-steps"><li>Mở app <b>Ảnh</b> → <b>Album</b> → <b>+</b> → <b>Album mới</b> → đặt tên <b class="k">${SC_ALBUM}</b>.</li></ol>
-    <div class="lbl">Bước 2 · Phím tắt lưu QR</div>
+    <ol class="sc-steps"><li>Mở app <b>Ảnh</b> → <b>Album</b> → <b>+</b> → <b>Album mới</b> → đặt tên <b class="k">${SC_ALBUM}</b> <button class="link cpn" data-n="${SC_ALBUM}">chép tên</button></li></ol>
+    <div class="lbl">Bước 2 · Tạo Phím tắt</div>
     <ol class="sc-steps">
       <li>Mở app <b>Phím tắt</b> → <b>+</b> → đặt tên <b class="k">${SC_SAVE}</b> <button class="link cpn" data-n="${SC_SAVE}">chép tên</button></li>
-      <li>Thêm tác vụ <b>Nhận nội dung của URL</b> (Get Contents of URL) → bấm chữ <b>URL</b> → chọn <b>Đầu vào phím tắt</b>.</li>
-      <li>Thêm <b>Lưu vào album ảnh</b> (Save to Photo Album) → chọn album <b>${SC_ALBUM}</b>.</li>
-      <li>Thêm <b>Mở ứng dụng</b> (Open App) → chọn <b>Techcombank</b>.</li>
-    </ol>
-    <div class="lbl">Bước 3 · Phím tắt xoá QR</div>
-    <ol class="sc-steps">
-      <li><b>+</b> phím tắt mới, tên <b class="k">${SC_DELETE}</b> <button class="link cpn" data-n="${SC_DELETE}">chép tên</button></li>
       <li>Thêm <b>Tìm ảnh</b> (Find Photos) → <b>Thêm bộ lọc</b> → <b>Album</b> là <b>${SC_ALBUM}</b>.</li>
-      <li>Thêm <b>Xoá ảnh</b> (Delete Photos).</li>
+      <li>Thêm <b>Nếu</b> (If) → điều kiện <b>Ảnh</b> <b>có giá trị bất kỳ</b>. Kéo <b>Xoá ảnh</b> (Delete Photos) vào giữa <b>Nếu</b> và <b>Ngược lại</b>.</li>
+      <li>Dưới <b>Kết thúc Nếu</b>: thêm <b>Nhận nội dung của URL</b> (Get Contents of URL) → bấm chữ <b>URL</b> → chọn <b>Đầu vào phím tắt</b>.</li>
+      <li>Thêm <b>Lưu vào album ảnh</b> (Save to Photo Album) → album <b>${SC_ALBUM}</b>.</li>
+      <li>Thêm <b>Mở ứng dụng</b> (Open App) → <b>Techcombank</b>.</li>
     </ol>
-    <div class="help mt">Mỗi lần xoá, iPhone sẽ hỏi <i>"Cho phép xoá ảnh?"</i>, Ngài bấm <b>Xoá</b>. Đây là quy định của Apple, không bỏ được. Ảnh vào mục <b>Đã xoá gần đây</b> và tự mất sau 30 ngày.</div>
-    <div class="btn-row mt"><button class="btn t-save">Thử lưu</button><button class="btn t-del">Thử xoá</button></div>
+    <div class="help mt">Khi xoá mã cũ, iPhone hỏi <i>"Cho phép xoá ảnh?"</i> → bấm <b>Xoá</b> (quy định của Apple, không bỏ được). Mã cũ vào <b>Đã xoá gần đây</b>, tự mất sau 30 ngày.</div>
+    <div class="btn-row mt"><button class="btn t-save">Chạy thử</button></div>
     <button class="btn primary mt toggle" style="--acc:${on ? 'var(--warn)' : 'var(--ok)'}">${on ? 'Tắt, quay về cách lưu thủ công' : 'Đã cài xong, bật'}</button>
   </div>`);
-  const sh = openSheet({ title: 'Tự xoá ảnh QR', body });
+  const sh = openSheet({ title: 'Trả nhanh bằng Phím tắt', body });
   $$('.cpn', body).forEach(b => b.onclick = () => copyText(b.dataset.n, 'tên phím tắt'));
   $('.t-save', body).onclick = () => runShortcut(SC_SAVE, new URL('icon-512.png', location.href).href);
-  $('.t-del', body).onclick = () => runShortcut(SC_DELETE);
   $('.toggle', body).onclick = async () => {
     const p = { id: 'profile', ...(S.profile || {}), shortcuts: !on };
     await DB.put('prefs', p); S.profile = p; sh.close(); render();
-    toast(p.shortcuts ? 'Đã bật tự xoá ảnh QR' : 'Đã tắt');
+    toast(p.shortcuts ? 'Đã bật trả nhanh' : 'Đã tắt');
     if (after) setTimeout(after, 250);
   };
 }
@@ -1014,7 +1008,7 @@ async function feeCenter() {
     <button class="set-item prof">${IC.home}<span><b>Thông tin căn hộ</b><small>${p.apartment ? `Căn ${esc(p.apartment)}${p.plateCar ? ' · ô tô ' + esc(p.plateCar) : ''}${p.plateBike ? ' · xe máy ' + esc(p.plateBike) : ''}` : 'Số căn hộ, biển số để điền nội dung chuyển khoản'}</small></span></button>
     <button class="set-item gm">${IC.mail}<span><b>Email báo phí (Gmail)</b><small class="gm-txt">Đang tải…</small></span></button>
     <button class="set-item chk hidden">${IC.sync}<span><b>Kiểm tra email ngay</b><small>Bình thường máy chủ tự kiểm tra 10 phút một lần</small></span></button>
-    <button class="set-item scs">${IC.trash}<span><b>Tự xoá ảnh QR sau khi trả</b><small>${useShortcuts() ? '<span style="color:var(--ok)">Đang bật</span> · dùng Phím tắt của iPhone' : 'Chưa bật · cần cài 2 Phím tắt (5 phút)'}</small></span></button>
+    <button class="set-item scs">${IC.trash}<span><b>Trả nhanh bằng Phím tắt</b><small>${useShortcuts() ? '<span style="color:var(--ok)">Đang bật</span> · trả phí chỉ 1 nút' : 'Chưa bật · cài 1 Phím tắt (5 phút) để trả phí bằng 1 nút'}</small></span></button>
     <button class="set-item ntf">${IC.bell}<span><b>Thông báo khi có phí mới</b><small class="ntf-txt">…</small></span></button>
   </div>`);
   const sh = openSheet({ title: 'Phí gửi xe', body });
