@@ -182,3 +182,132 @@ def vietqr_payload(bin_: str, account: str, amount: int, note: str) -> str:
         s += _tlv("62", _tlv("08", note))
     s += "6304"
     return s + _crc16(s)
+
+
+# ---------------------------------------------------------------- Google Apps Script (không cần mật khẩu)
+# Đoạn mã chạy trong tài khoản Google của chủ nhà, quyền CHỈ ĐỌC Gmail. Máy chủ OMV gọi link /exec kèm khóa bí mật.
+SCRIPT_MANIFEST = """{
+  "timeZone": "Asia/Ho_Chi_Minh",
+  "runtimeVersion": "V8",
+  "exceptionLogging": "STACKDRIVER",
+  "dependencies": {
+    "enabledAdvancedServices": [{ "userSymbol": "Gmail", "serviceId": "gmail", "version": "v1" }]
+  },
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/gmail.readonly",
+    "https://www.googleapis.com/auth/userinfo.email"
+  ],
+  "webapp": { "executeAs": "USER_DEPLOYING", "access": "ANYONE_ANONYMOUS" }
+}
+"""
+
+SCRIPT_CODE = r"""// MyBike'nCar – tìm email báo phí gửi xe của Seasons Avenue (chỉ đọc Gmail).
+// Dán nguyên đoạn này vào Code.gs, không cần sửa gì.
+const KEY = '__KEY__';
+const QUERY = 'from:(seasons) newer_than:60d';
+
+function doGet(e) {
+  const p = (e && e.parameter) || {};
+  if (p.key !== KEY) return out_({ ok: false, error: 'forbidden' });
+  if (p.ping) return out_({ ok: true, account: Session.getEffectiveUser().getEmail() });
+  const res = Gmail.Users.Messages.list('me', { q: QUERY, maxResults: 30 });
+  const items = [];
+  (res.messages || []).forEach(function (r) {
+    const m = Gmail.Users.Messages.get('me', r.id, { format: 'full' });
+    const h = {};
+    (m.payload.headers || []).forEach(function (x) { h[x.name.toLowerCase()] = x.value; });
+    const acc = { plain: '', html: '' };
+    walk_(m.payload, acc);
+    const body = acc.html || acc.plain;
+    // Chỉ gửi đi email có thông tin chuyển khoản, bỏ qua mọi email khác.
+    if (!/(Số tiền|Amount)/i.test(body) || !/(Số tài khoản|Account No)/i.test(body)) return;
+    items.push({ messageId: h['message-id'] || r.id, date: Number(m.internalDate), from: h['from'] || '',
+                 subject: h['subject'] || '', html: acc.html, text: acc.plain });
+  });
+  return out_({ ok: true, v: 1, messages: items });
+}
+
+function walk_(part, acc) {
+  if (part.parts && part.parts.length) { part.parts.forEach(function (c) { walk_(c, acc); }); return; }
+  if (part.filename || !part.body || !part.body.data) return;
+  if (part.mimeType !== 'text/html' && part.mimeType !== 'text/plain') return;
+  let charset = 'UTF-8';
+  (part.headers || []).forEach(function (x) {
+    const m = /charset="?([^";]+)/i.exec(x.value || '');
+    if (x.name.toLowerCase() === 'content-type' && m) charset = m[1];
+  });
+  const d = part.body.data;
+  let bytes;
+  if (typeof d === 'string') {
+    const s = d.replace(/-/g, '+').replace(/_/g, '/');
+    bytes = Utilities.base64Decode(s + '==='.slice((s.length + 3) % 4));
+  } else {
+    bytes = d;
+  }
+  let text;
+  try { text = Utilities.newBlob(bytes).getDataAsString(charset); }
+  catch (err) { text = Utilities.newBlob(bytes).getDataAsString('UTF-8'); }
+  if (part.mimeType === 'text/html') acc.html += text; else acc.plain += text;
+}
+
+function out_(o) {
+  return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
+}
+"""
+
+
+def _script_get(url: str, key: str, extra: str = ""):
+    import json
+    import urllib.parse
+    import urllib.request
+    full = f"{url}?key={urllib.parse.quote(key)}{extra}"
+    req = urllib.request.Request(full, headers={"User-Agent": "MyBikenCar/1.0"})
+    with urllib.request.urlopen(req, timeout=60) as r:  # Google chuyển hướng sang script.googleusercontent.com
+        raw = r.read().decode("utf-8", "replace")
+        ctype = r.headers.get("Content-Type", "")
+    if "json" not in ctype and not raw.lstrip().startswith("{"):
+        raise ScriptError("html")
+    data = json.loads(raw)
+    if not data.get("ok"):
+        raise ScriptError(data.get("error") or "error")
+    return data
+
+
+class ScriptError(Exception):
+    pass
+
+
+def script_error(e: Exception) -> str:
+    msg = str(e)
+    if isinstance(e, ScriptError):
+        if msg == "forbidden":
+            return "Khóa bí mật không khớp: hãy chép lại đoạn mã Code.gs mới nhất rồi triển khai lại"
+        if msg == "html":
+            return "Link chưa dùng được: khi triển khai chọn 'Ai có quyền truy cập: Bất kỳ ai' và đã bấm Cấp quyền"
+    if "HTTP Error 404" in msg:
+        return "Không tìm thấy script: kiểm tra lại đường link /exec"
+    if isinstance(e, OSError):
+        return "Máy chủ OMV chưa kết nối được tới Google (mạng / DNS)"
+    return msg[:200]
+
+
+def script_ping(url: str, key: str) -> dict:
+    return _script_get(url, key, "&ping=1")
+
+
+def fetch_fees_script(url: str, key: str, skip_ids: set):
+    found = []
+    for m in _script_get(url, key).get("messages") or []:
+        mid = (m.get("messageId") or "").strip()
+        if not mid:
+            continue
+        fid = "fee" + hashlib.sha1(mid.encode()).hexdigest()[:16]
+        if fid in skip_ids:
+            continue
+        text = html_to_text(m["html"]) if m.get("html") else (m.get("text") or "")
+        fee = parse_fee(text)
+        if not fee:
+            continue
+        fee.update(id=fid, subject=m.get("subject", ""), sender=m.get("from", ""), received=int(m.get("date") or 0), paidAt=None)
+        found.append(fee)
+    return found

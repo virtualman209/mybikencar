@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kết nối Gmail</title>
+<style>
+:root{--bg:#F6F3EE;--card:#fff;--ink:#151413;--muted:#7A736B;--soft:#ECE6DE;--ok:#1E8A4C;--warn:#C7361B;--acc:#DE1149;color-scheme:light dark}
+@media (prefers-color-scheme:dark){:root{--bg:#121110;--card:#1D1C1A;--ink:#F3EFE9;--muted:#9C958C;--soft:#2A2825;--ok:#4CC27F;--warn:#FF6B4F;--acc:#FF4677}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+main{max-width:760px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:28px;letter-spacing:-.6px;margin:0 0 4px}
+.lead{color:var(--muted);margin:0 0 20px}
+.status{background:var(--card);border-radius:14px;padding:12px 14px;margin-bottom:18px}
+ol{padding-left:0;list-style:none;counter-reset:s;margin:0}
+ol>li{counter-increment:s;position:relative;background:var(--card);border-radius:14px;padding:14px 14px 14px 52px;margin-bottom:10px}
+ol>li::before{content:counter(s);position:absolute;left:14px;top:13px;width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-weight:800;font-size:14px}
+b.k{background:var(--soft);border-radius:6px;padding:0 6px;font-weight:650}
+.code{position:relative;margin-top:10px}
+pre{margin:0;background:var(--soft);border-radius:10px;padding:12px;max-height:180px;overflow:auto;font-size:12.5px;line-height:1.45;white-space:pre}
+button{font:inherit;cursor:pointer;border:0;border-radius:10px;font-weight:700}
+.cp{position:absolute;right:8px;top:8px;background:var(--ink);color:var(--bg);padding:6px 12px;font-size:14px}
+input{width:100%;font:inherit;color:inherit;background:var(--bg);border:2px solid var(--soft);border-radius:10px;padding:10px 12px;margin-top:8px}
+.save{margin-top:10px;width:100%;height:48px;background:var(--acc);color:#fff;font-size:16px}
+.save[disabled]{opacity:.5}
+.msg{margin-top:10px;font-weight:600}
+.ok{color:var(--ok)}.err{color:var(--warn)}
+small{color:var(--muted)}
+a{color:inherit}
+</style>
+</head>
+<body>
+<main>
+  <h1>Kết nối Gmail không cần mật khẩu</h1>
+  <p class="lead">Một đoạn mã nhỏ chạy trong tài khoản Google của Ngài, chỉ có quyền <b>xem</b> email, và chỉ gửi về máy chủ OMV những email báo phí gửi xe của Seasons Avenue. Nên làm trên máy tính.</p>
+  <div class="status" id="status">Đang tải…</div>
+  <ol>
+    <li>Đăng nhập đúng tài khoản Gmail nhận email báo phí, rồi mở <a href="https://script.google.com/home/projects/create" target="_blank" rel="noopener"><b>script.google.com → Dự án mới</b></a>.</li>
+    <li>Bấm biểu tượng bánh răng <b class="k">⚙ Cài đặt dự án</b> ở cột trái → tích ô <b class="k">Hiển thị tệp kê khai "appsscript.json" trong trình chỉnh sửa</b>.</li>
+    <li>Quay lại <b class="k">‹› Trình chỉnh sửa</b> → mở tệp <b class="k">appsscript.json</b> → xoá hết → dán đoạn dưới:
+      <div class="code"><pre id="manifest"></pre><button class="cp" data-t="manifest">Chép</button></div></li>
+    <li>Mở tệp <b class="k">Code.gs</b> → xoá hết → dán đoạn dưới → bấm <b class="k">💾 Lưu</b> (Ctrl+S):
+      <div class="code"><pre id="code"></pre><button class="cp" data-t="code">Chép</button></div>
+      <small>Đoạn mã có khóa bí mật riêng của nhà Ngài, đừng gửi cho người khác.</small></li>
+    <li>Bấm <b class="k">Triển khai</b> (góc trên bên phải) → <b class="k">Tùy chọn triển khai mới</b> → loại <b class="k">Ứng dụng web</b>. Kiểm tra: <b class="k">Thực thi dưới dạng: Tôi</b>, <b class="k">Người có quyền truy cập: Bất kỳ ai</b> → <b class="k">Triển khai</b>.</li>
+    <li>Bấm <b class="k">Cấp quyền truy cập</b> → chọn tài khoản. Google sẽ báo <i>"Google chưa xác minh ứng dụng này"</i> vì đây là mã do chính Ngài tạo → bấm <b class="k">Nâng cao</b> → <b class="k">Truy cập … (không an toàn)</b> → <b class="k">Cho phép</b>. Quyền xin chỉ là <i>xem email</i>, không gửi hay xoá được.</li>
+    <li>Chép <b class="k">URL ứng dụng web</b> (đuôi <code>/exec</code>) và dán vào đây:
+      <input id="url" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <button class="save" id="save">Lưu và kiểm tra</button>
+      <div class="msg" id="msg"></div></li>
+  </ol>
+  <p><small>Muốn ngắt: vào myaccount.google.com → Bảo mật → Ứng dụng và dịch vụ bên thứ ba → gỡ quyền của dự án này. Đoạn mã chỉ đọc 30 email gần nhất của người gửi có chữ "seasons" trong 60 ngày.</small></p>
+</main>
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+async function status() {
+  try {
+    const j = await (await fetch('api/mail', { cache: 'no-store' })).json();
+    $('#status').innerHTML = !j.configured ? 'Chưa kết nối Gmail.'
+      : `Đang dùng: <b>${j.mode === 'script' ? 'Apps Script (không mật khẩu)' : 'mật khẩu ứng dụng'}</b> · ${esc(j.user)}` +
+        (j.lastError ? ` · <span class="err">${esc(j.lastError)}</span>` : j.lastCheck ? ` · <span class="ok">kiểm tra lúc ${new Date(j.lastCheck).toLocaleTimeString('vi-VN')}</span>` : '');
+  } catch { $('#status').textContent = 'Không kết nối được máy chủ OMV.'; }
+}
+(async () => {
+  const j = await (await fetch('api/mail/script', { cache: 'no-store' })).json();
+  $('#manifest').textContent = j.manifest; $('#code').textContent = j.code;
+  status();
+})();
+document.querySelectorAll('.cp').forEach(b => b.onclick = async () => {
+  const t = $('#' + b.dataset.t).textContent;
+  try { await navigator.clipboard.writeText(t); }
+  catch { const r = document.createRange(); r.selectNodeContents($('#' + b.dataset.t)); getSelection().removeAllRanges(); getSelection().addRange(r); document.execCommand('copy'); }
+  b.textContent = 'Đã chép ✓'; setTimeout(() => b.textContent = 'Chép', 1800);
+});
+$('#save').onclick = async () => {
+  const btn = $('#save'), msg = $('#msg');
+  btn.disabled = true; msg.className = 'msg'; msg.textContent = 'Đang kiểm tra…';
+  try {
+    const r = await fetch('api/mail', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'script', url: $('#url').value.trim() }) });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.detail || r.status);
+    msg.className = 'msg ok';
+    msg.textContent = j.lastError ? 'Đã kết nối, nhưng: ' + j.lastError : `Đã kết nối ${j.user}. Tìm thấy ${j.lastFound || 0} email báo phí mới. Mở app để xem.`;
+    status();
+  } catch (e) { msg.className = 'msg err'; msg.textContent = e.message; }
+  finally { btn.disabled = false; }
+};
+</script>
+</body>
+</html>

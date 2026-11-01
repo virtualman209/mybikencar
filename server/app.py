@@ -349,8 +349,18 @@ def write_json(path: Path, obj):
     os.replace(tmp, path)
 
 
+def mail_mode(cfg: dict) -> str:
+    if cfg.get("mode") == "script" and cfg.get("scriptUrl") and cfg.get("scriptKey"):
+        return "script"
+    if cfg.get("user") and cfg.get("password"):
+        return "imap"
+    return ""
+
+
 def mail_public(cfg: dict) -> dict:
-    return {k: cfg.get(k) for k in ("user", "keyword", "lastCheck", "lastError", "lastFound")} | {"configured": bool(cfg.get("user") and cfg.get("password"))}
+    mode = mail_mode(cfg)
+    return {k: cfg.get(k) for k in ("user", "keyword", "lastCheck", "lastError", "lastFound")} | {
+        "configured": bool(mode), "mode": mode, "user": cfg.get("user") if mode == "imap" else (cfg.get("scriptAccount") or "Google Apps Script")}
 
 
 def mail_error(e: Exception) -> str:
@@ -366,11 +376,15 @@ def check_mail_now() -> dict:
     """Đọc Gmail, thêm phí mới vào DB, gửi thông báo. Trả về trạng thái."""
     with _mail_lock:
         cfg = read_json(MAIL_CFG, {})
-        if not (cfg.get("user") and cfg.get("password")):
+        mode = mail_mode(cfg)
+        if not mode:
             return mail_public(cfg)
         seen = set(cfg.get("seen") or [])
         try:
-            new = feemail.fetch_fees(cfg["user"], cfg["password"], cfg.get("keyword", "seasons"), seen)
+            if mode == "script":
+                new = feemail.fetch_fees_script(cfg["scriptUrl"], cfg["scriptKey"], seen)
+            else:
+                new = feemail.fetch_fees(cfg["user"], cfg["password"], cfg.get("keyword", "seasons"), seen)
             for fee in new:
                 exists = q("SELECT 1 FROM records WHERE store='fees' AND id=?", (fee["id"],))
                 if not exists:
@@ -411,9 +425,21 @@ async def set_mail(request: Request):
     cfg = read_json(MAIL_CFG, {})
     if body.get("disconnect"):
         cfg.pop("password", None)
-        cfg["user"] = ""
+        cfg.update(user="", mode="", scriptUrl="")
         write_json(MAIL_CFG, cfg)
         return mail_public(cfg)
+    if body.get("mode") == "script":
+        url = (body.get("url") or "").strip()
+        if not re.match(r"^https://script\.google\.com/(a/[^/]+/)?macros/s/[A-Za-z0-9_-]+/exec$", url):
+            raise HTTPException(400, "Đường link phải có dạng https://script.google.com/macros/s/…/exec")
+        key = cfg.get("scriptKey") or script_key(cfg)
+        try:
+            info = feemail.script_ping(url, key)
+        except Exception as e:  # noqa: BLE001
+            raise HTTPException(400, feemail.script_error(e))
+        cfg.update(mode="script", scriptUrl=url, scriptKey=key, scriptAccount=info.get("account") or "", lastError=None)
+        write_json(MAIL_CFG, cfg)
+        return check_mail_now()
     user = (body.get("user") or "").strip()
     password = re.sub(r"\s", "", body.get("password") or "") or cfg.get("password", "")
     if not user or not password:
@@ -425,6 +451,25 @@ async def set_mail(request: Request):
     cfg.update(user=user, password=password, keyword=(body.get("keyword") or cfg.get("keyword") or "seasons").strip(), lastError=None)
     write_json(MAIL_CFG, cfg)
     return check_mail_now()
+
+
+def script_key(cfg: dict) -> str:
+    import secrets
+    cfg["scriptKey"] = secrets.token_urlsafe(24)
+    write_json(MAIL_CFG, cfg)
+    return cfg["scriptKey"]
+
+
+@app.get("/api/mail/script")
+def get_script():
+    cfg = read_json(MAIL_CFG, {})
+    key = cfg.get("scriptKey") or script_key(cfg)
+    return {"code": feemail.SCRIPT_CODE.replace("__KEY__", key), "manifest": feemail.SCRIPT_MANIFEST}
+
+
+@app.get("/gmail")
+def gmail_page():
+    return FileResponse(Path(__file__).parent / "gmail.html", headers={"Cache-Control": "no-cache"})
 
 
 @app.post("/api/mail/check")

@@ -389,7 +389,7 @@ $('#btnSettings .g').innerHTML = IC.gear;
    Config: Seasons Avenue
    ========================================================= */
 /* App version – keep in sync with VERSION in sw.js */
-const APP_VERSION = 'v1.1.0';
+const APP_VERSION = 'v1.2.0';
 
 const VEH = {
   bike: { name: 'Xe máy', floors: ['M', '2', '3', '4'], zones: f => f === 'M' ? ['S1', 'S2', 'S3', 'S4', 'EV'] : ['S1', 'S2', 'S3', 'S4'] },
@@ -880,17 +880,25 @@ async function enablePush() {
 }
 
 function gmailSheet(info, after) {
+  const link = new URL('gmail', location.href).href;
   const body = h(`<div>
-    <div class="help">Máy chủ OMV đọc Gmail (chỉ đọc, chỉ email của người gửi có chữ bên dưới) để tự nhận email báo phí gửi xe.</div>
+    ${info.configured ? `<div class="paid-box" style="text-align:left">Đang kết nối: ${info.mode === 'script' ? 'Apps Script (không mật khẩu)' : 'mật khẩu ứng dụng'} · ${esc(info.user)}</div>` : ''}
+    <div class="lbl">Cách 1 · Không cần mật khẩu (khuyên dùng)</div>
+    <div class="help">Một đoạn mã nhỏ chạy trong tài khoản Google của Ngài, chỉ có quyền xem email, chỉ gửi về OMV các email báo phí. Làm một lần, khoảng 5 phút, <b>nên làm trên máy tính</b>.</div>
+    <div class="copy-row" style="border-radius:12px;margin-top:8px"><b style="font-size:14px;word-break:break-all">${esc(link)}</b><button class="cp cplink">Chép</button></div>
+    <button class="btn primary mt open-guide" style="--acc:var(--ink)">Mở trang hướng dẫn</button>
+    <details class="mt" ${info.mode === 'imap' ? 'open' : ''}><summary class="lbl" style="cursor:pointer">Cách 2 · Mật khẩu ứng dụng Gmail</summary>
     <div class="lbl">Địa chỉ Gmail</div><input class="field" name="user" type="email" placeholder="ten@gmail.com" autocomplete="off" autocapitalize="off">
     <div class="lbl">Mật khẩu ứng dụng <span class="opt">(16 chữ, không phải mật khẩu Gmail)</span></div>
     <input class="field" name="password" type="password" placeholder="${info.configured ? 'Để trống nếu không đổi' : 'xxxx xxxx xxxx xxxx'}" autocomplete="off">
     <div class="lbl">Người gửi có chữ</div><input class="field" name="keyword" placeholder="seasons" autocomplete="off" autocapitalize="off">
     <div class="help mt"><b>Tạo mật khẩu ứng dụng:</b><ol><li>Tài khoản Google phải bật <b>Xác minh 2 bước</b>.</li><li>Mở <a href="https://myaccount.google.com/apppasswords" target="_blank">myaccount.google.com/apppasswords</a>.</li><li>Đặt tên "MyBikenCar" → <b>Tạo</b> → chép 16 chữ vào ô trên.</li></ol>Mật khẩu chỉ lưu trên máy OMV nhà, không lên GitHub. Muốn thu hồi thì xoá nó ở trang trên.</div>
     <div class="err warn-line hidden"></div>
-    <button class="btn primary mt save" style="--acc:var(--ink)">Lưu và kiểm tra</button>
-    ${info.configured ? '<button class="btn danger dis">Ngắt kết nối Gmail</button>' : ''}</div>`);
-  $('[name=user]', body).value = info.user || '';
+    <button class="btn primary mt save" style="--acc:var(--ink)">Lưu và kiểm tra</button></details>
+    ${info.configured ? '<button class="btn danger mt dis">Ngắt kết nối Gmail</button>' : ''}</div>`);
+  $('.cplink', body).onclick = () => copyText(link, 'đường link');
+  $('.open-guide', body).onclick = () => window.open(link, '_blank');
+  $('[name=user]', body).value = info.mode === 'imap' ? (info.user || '') : '';
   $('[name=keyword]', body).value = info.keyword || 'seasons';
   const sh = openSheet({ title: 'Kết nối Gmail', body });
   const err = $('.err', body);
@@ -937,7 +945,7 @@ async function feeCenter() {
     const t = $('.gm-txt', body);
     if (!info.configured) { t.innerHTML = '<b style="color:var(--bike)">Chưa kết nối</b> · bấm để kết nối'; return; }
     $('.chk', body).classList.remove('hidden');
-    t.innerHTML = `${esc(info.user)}<br>${info.lastError ? `<span style="color:var(--warn)">${esc(info.lastError)}</span>` : `<span style="color:var(--ok)">Đang hoạt động</span>`}${info.lastCheck ? ` · kiểm tra lúc ${fmtTime(info.lastCheck)}` : ''}`;
+    t.innerHTML = `${info.mode === 'script' ? 'Không mật khẩu · ' : ''}${esc(info.user)}<br>${info.lastError ? `<span style="color:var(--warn)">${esc(info.lastError)}</span>` : `<span style="color:var(--ok)">Đang hoạt động</span>`}${info.lastCheck ? ` · kiểm tra lúc ${fmtTime(info.lastCheck)}` : ''}`;
   };
   Sync.fetch('api/mail', {}, 10000).then(r => r.json()).then(j => { info = j; showMail(); }).catch(() => { $('.gm-txt', body).textContent = 'Chưa kết nối được OMV'; });
   $('.gm', body).onclick = () => { sh.close(); setTimeout(() => gmailSheet(info, feeCenter), 250); };
