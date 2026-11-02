@@ -2,6 +2,12 @@
 
 Chủ nhà nói tiếng Việt, không phải lập trình viên. Trả lời tiếng Việt, ngắn gọn; mỗi lần sửa phải báo tên phiên bản.
 
+## Quy tắc
+- **LUÔN GỬI LINK LAN + TAILSCALE** (chủ nhà yêu cầu 02/11/2026, cả hệ sinh thái, không cần nhắc): mỗi lần báo cập nhật / sửa lỗi web nào cũng kèm
+  link vào web đó bằng cả mạng nhà `http://192.168.50.231:<cổng>` lẫn Tailscale `http://100.78.213.85:<cổng>` (có https qua Tailscale thì ghi thêm).
+  Cổng: VM STUDY 8090 · VM GALLERY 8091 · VM PROFILE 8092 · VM PORTFOLIO 8093 · VM HOME 8094 · MY LIBRARY 8095 (https nhà 8445) · MyBike'nCar 8096
+  (https Tailscale 8446) · VM AI 8097. Tailscale chỉ vào được khi máy đang dùng (iPhone / PC) đã bật app Tailscale và đăng nhập cùng tài khoản.
+
 ## Cấu trúc
 - `index.html` – toàn bộ app (một tệp). `APP_VERSION` là số phiên bản duy nhất; máy chủ đọc nó để báo phiên bản.
 - `sw.js` – cache offline. **Mỗi lần đổi app phải đổi `VERSION` trong sw.js giống `APP_VERSION`**, nếu không iPhone không nhận bản mới.
