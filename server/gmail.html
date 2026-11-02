@@ -2,7 +2,11 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<style>html{touch-action:manipulation;-webkit-text-size-adjust:100%}</style>
+<script>/* chặn phóng to / thu nhỏ trên iPhone */(function(d){function n(e){e.preventDefault()}["gesturestart","gesturechange","gestureend"].forEach(function(t){d.addEventListener(t,n,{passive:false})});d.addEventListener("touchmove",function(e){if(e.touches&&e.touches.length>1)e.preventDefault()},{passive:false})})(document);</script>
+<style>/* chặn chuột phải / chạm giữ trên nút, link (chủ nhà yêu cầu 02/11/2026) */a,button,[role=button],[onclick],label,summary,.btn{-webkit-touch-callout:none}button,[role=button],.btn,summary,label{-webkit-user-select:none;user-select:none}</style>
+<script>document.addEventListener("contextmenu",function(e){if(e.target.closest&&e.target.closest('a,button,[role=button],[onclick],label,summary,select,.btn,input[type=button],input[type=submit],input[type=checkbox],input[type=radio],input[type=file]'))e.preventDefault()},true);</script>
 <title>Kết nối Gmail</title>
 <style>
 :root{--bg:#F6F3EE;--card:#fff;--ink:#151413;--muted:#7A736B;--soft:#ECE6DE;--ok:#1E8A4C;--warn:#C7361B;--acc:#DE1149;color-scheme:light dark}

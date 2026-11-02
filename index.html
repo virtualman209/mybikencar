@@ -36,6 +36,7 @@
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%;touch-action:manipulation}
+a,button,[role=button],[onclick],label,summary{-webkit-touch-callout:none}
 html,body{margin:0;background:var(--bg);color:var(--ink)}
 body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   font-size:16px;line-height:1.4;overscroll-behavior-y:none}
@@ -390,6 +391,8 @@ const IC = {
 const icon = n => IC[n] || '';
 $$('[data-icon]').forEach(el => el.innerHTML = icon(el.dataset.icon));
 
+/* Chặn chuột phải / chạm giữ (menu Sao chép, Mở trong tab mới…) trên nút, link bấm được (chủ nhà yêu cầu 02/11/2026). */
+document.addEventListener('contextmenu', e => { if (e.target.closest && e.target.closest('a,button,[role=button],[onclick],label,summary,select,.btn,input[type=button],input[type=submit],input[type=checkbox],input[type=radio],input[type=file]')) e.preventDefault(); }, true);
 /* Chặn phóng to / thu nhỏ: iOS bỏ qua user-scalable=no, nên chặn thêm cử chỉ 2 ngón và chạm đúp. */
 for (const ev of ['gesturestart', 'gesturechange', 'gestureend']) document.addEventListener(ev, e => e.preventDefault(), { passive: false });
 document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
@@ -405,7 +408,7 @@ $('#btnSettings .g').innerHTML = IC.gear;
    Config: Seasons Avenue
    ========================================================= */
 /* App version – keep in sync with VERSION in sw.js */
-const APP_VERSION = 'v1.6.2';
+const APP_VERSION = 'v1.6.3';
 
 const VEH = {
   bike: { name: 'Xe máy', floors: ['M', '2', '3', '4'], zones: f => f === 'M' ? ['S1', 'S2', 'S3', 'S4', 'EV'] : ['S1', 'S2', 'S3', 'S4'] },

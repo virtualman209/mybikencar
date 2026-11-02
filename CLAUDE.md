@@ -19,6 +19,7 @@ iPhone giữ đủ dữ liệu trong IndexedDB. Mọi thay đổi vào `outbox`,
 Máy `192.168.50.231`, Tailscale `100.78.213.85`. DAS = `/srv/dev-disk-by-uuid-63bcf028-ccf8-4a65-a3f2-0510da8ead2c`. Thư mục app `DAS/VM_bikencar/{web,data,backup}`.
 
 ## Nhật ký phiên bản
+- **v1.6.3** (02/11/2026) – Chặn chuột phải / chạm giữ (menu Sao chép, Mở trong tab mới…) trên nút, link và chỗ bấm được: `contextmenu` bị chặn khi bấm vào `a, button, [role=button], [onclick], label, summary, select, .btn` và ô nút / ô tick; `-webkit-touch-callout:none`. Chữ thường, ô nhập, ảnh (kể cả mã QR) vẫn giữ được. Trang `/gmail` cũng chặn phóng to + chuột phải.
 - **v1.6.2** (01/11/2026) – Chặn phóng to/thu nhỏ: viewport `maximum-scale=1, user-scalable=no`, chặn `gesture*`, chạm 2 ngón và chạm đúp (iOS bỏ qua user-scalable nên phải chặn bằng JS), `touch-action:manipulation`.
 - **v1.6.1** (01/11/2026) – Nội dung chuyển khoản chỉ gồm chữ không dấu, số, dấu cách (`cleanNote` ở app, cùng luật trong `vietqr_payload` ở máy chủ). Biển số bỏ hết `-` `.` (30A-123.45 → 30A12345); tháng 11/2026 → 11 2026.
 - **v1.6.0** (01/11/2026) – Bỏ hẳn tính năng Phím tắt (lưu/xoá ảnh QR tự động) theo yêu cầu chủ nhà: quá rườm rà. Thanh toán quay về 2 bước: lưu mã QR vào Ảnh → mở Techcombank quét ảnh. Không làm lại tính năng này.
