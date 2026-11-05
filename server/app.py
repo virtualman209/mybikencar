@@ -20,6 +20,7 @@ from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 
 import feemail
+import ticklink
 
 DATA = Path(os.environ.get("DATA_DIR", "/app/data"))
 BACKUP = Path(os.environ.get("BACKUP_DIR", "/backup"))
@@ -174,7 +175,13 @@ async def put_record(store: str, rid: str, request: Request):
     obj = await request.json()
     if not isinstance(obj, dict) or obj.get("id") != rid:
         raise HTTPException(400, "dữ liệu không hợp lệ")
+    old = None
+    if store == "fees":
+        r = q("SELECT data FROM records WHERE store='fees' AND id=?", (rid,))
+        old = json.loads(r[0]["data"]) if r else None
     save_record(store, obj)
+    if store == "fees":
+        ticklink.on_fee_saved(old, obj)
     return {"ok": True}
 
 
@@ -410,6 +417,20 @@ def mail_loop():
 
 
 threading.Thread(target=mail_loop, daemon=True).start()
+ticklink.init(DATA)
+
+
+# ---------------------------------------------------------------- VM-TickTick: trả phí xong -> tick việc
+@app.get("/api/ticktick")
+def ticktick_status(fee: str = ""):
+    return ticklink.status(check_id(fee) if fee else None)
+
+
+@app.post("/api/ticktick")
+async def ticktick_keys(request: Request):
+    body = await request.json()
+    ticklink.set_keys(body if isinstance(body, dict) else {})
+    return ticklink.status()
 
 
 @app.get("/api/mail")

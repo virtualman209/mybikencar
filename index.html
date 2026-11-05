@@ -408,7 +408,7 @@ $('#btnSettings .g').innerHTML = IC.gear;
    Config: Seasons Avenue
    ========================================================= */
 /* App version – keep in sync with VERSION in sw.js */
-const APP_VERSION = 'v1.6.3';
+const APP_VERSION = 'v1.7.0';
 
 const VEH = {
   bike: { name: 'Xe máy', floors: ['M', '2', '3', '4'], zones: f => f === 'M' ? ['S1', 'S2', 'S3', 'S4', 'EV'] : ['S1', 'S2', 'S3', 'S4'] },
@@ -815,6 +815,21 @@ async function setPaid(f, paid) {
   await DB.put('fees', f);
   const i = S.fees.findIndex(x => x.id === f.id); if (i >= 0) S.fees[i] = f;
   render();
+  if (paid && Sync.on) watchTick(f.id);
+}
+// Trả xong -> máy chủ OMV tự đánh dấu xong việc trong TickTick (qua VM-TickTick). Hỏi kết quả để báo.
+async function tickStatus(id) {
+  try { const r = await fetch(`api/ticktick?fee=${encodeURIComponent(id)}`, { cache: 'no-store' }); return r.ok ? await r.json() : null; } catch { return null; }
+}
+const tickLine = t => t?.state === 'done' ? `✓ Đã đánh dấu xong “${esc(t.title)}” trong TickTick`
+  : t?.state === 'failed' ? `TickTick: ${esc(t.msg || 'không đánh dấu được')}`
+  : t?.state === 'pending' ? `TickTick: đang chờ đánh dấu xong${t.error ? ' · ' + esc(t.error) : ''}` : '';
+async function watchTick(id) {
+  for (let k = 0; k < 20; k++) {
+    await new Promise(r => setTimeout(r, k ? 2500 : 1500));
+    const t = await tickStatus(id);
+    if (t?.state === 'done' || t?.state === 'failed') { toast(tickLine(t).replace(/<[^>]+>/g, ''), [], 4500); return; }
+  }
 }
 
 function paySheet(f) {
@@ -826,7 +841,7 @@ function paySheet(f) {
   const body = h(`<div class="pay">
     <div class="pay-amt">${money(f.amount)}</div>
     <div class="pay-sub">${f.month ? 'Tháng ' + esc(f.month) : ''}${f.due ? ` · hạn ${fmtDate(parseISO(f.due))}` : ''}${d.txt && !f.paidAt ? ` · <span class="${d.cls}">${d.txt}</span>` : ''}</div>
-    ${f.paidAt ? `<div class="paid-box">✓ Đã thanh toán lúc ${fmtTime(f.paidAt)} ngày ${fmtDate(f.paidAt)}</div>` : ''}
+    ${f.paidAt ? `<div class="paid-box">✓ Đã thanh toán lúc ${fmtTime(f.paidAt)} ngày ${fmtDate(f.paidAt)}<small class="tt-line" style="display:block;margin-top:4px"></small></div>` : ''}
     <div class="lbl">Chuyển tới</div>
     <div class="kv"><span>${esc(f.accountName || 'Ban quản lý')}</span><small>${esc(f.bank || '')}</small></div>
     <div class="copy-row"><b>${esc(f.accountNo)}</b><button class="cp" data-c="acc">Chép</button></div>
@@ -847,6 +862,7 @@ function paySheet(f) {
     <div class="help mt">Techcombank không cho app khác mở thẳng màn hình chuyển tiền, nên app dùng mã QR để Techcombank tự điền thông tin.</div>
   </div>`);
   const sh = openSheet({ title: `Phí gửi ${vehName(f.vehicle)}`, titleIcon: f.vehicle === 'bike' ? 'bike' : 'car', acc: f.vehicle === 'bike' ? 'bike' : 'car', body });
+  if (f.paidAt && Sync.on) tickStatus(f.id).then(t => { const el = $('.tt-line', body); if (el) el.innerHTML = tickLine(t); });
   const cur = () => cleanNote($('.note-in', body).value);
   const qrSrc = () => `api/fees/${encodeURIComponent(f.id)}/qr.png?tn=${encodeURIComponent(cur())}`;
   const qr = $('.qr', body);

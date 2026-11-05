@@ -14,6 +14,8 @@ services:
       - "8096:8000"
     environment:
       - TZ=Asia/Ho_Chi_Minh
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # gọi VM-TickTick (cổng 8099) để tick việc khi trả phí
     volumes:
       - ../data:/app/data
       - ../backup:/backup
