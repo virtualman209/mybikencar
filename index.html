@@ -20,7 +20,7 @@
   --soft:#ECE6DE; --soft2:#F1ECE5;
   --bike:#EE4E17; --car:#DE1149;
   --slab:#E58C7D; --slab-side:#C9705F; --slab-mid:#FFFFFF; --slab-mid-side:#DDD6CC;
-  --ok:#1E8A4C; --warn:#C7361B;
+  --ok:#1E8A4C; --warn:#C7361B; --gold:#C98A00;
   --r:18px;
   --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
   color-scheme:light dark;
@@ -31,7 +31,7 @@
     --soft:#2A2825; --soft2:#23211F;
     --bike:#FF6B3D; --car:#FF4677;
     --slab:#B9675A; --slab-side:#8E4C41; --slab-mid:#3A3733; --slab-mid-side:#2A2825;
-    --ok:#4CC27F; --warn:#FF6B4F;
+    --ok:#4CC27F; --warn:#FF6B4F; --gold:#FFC83D;
   }
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -145,6 +145,7 @@ svg{display:block}
 .mcard{background:var(--card);border:1.25px solid var(--line);border-radius:var(--r);padding:16px}
 .mcard .k{font-size:13px;color:var(--muted);font-weight:600}
 .mcard .big{font-size:30px;font-weight:800;letter-spacing:-.6px;line-height:1.1;margin-top:2px;color:var(--acc)}
+.mcard .big.km{color:var(--gold)}
 .mcard .sub{font-size:15px;margin-top:4px}
 .mcard .next{margin-top:12px;padding-top:12px;border-top:1.5px dashed var(--soft);font-size:15px}
 .next .late{color:var(--warn);font-weight:700}
@@ -408,7 +409,7 @@ $('#btnSettings .g').innerHTML = IC.gear;
    Config: Seasons Avenue
    ========================================================= */
 /* App version – keep in sync with VERSION in sw.js */
-const APP_VERSION = 'v1.7.0';
+const APP_VERSION = 'v1.7.1';
 
 const VEH = {
   bike: { name: 'Xe máy', floors: ['M', '2', '3', '4'], zones: f => f === 'M' ? ['S1', 'S2', 'S3', 'S4', 'EV'] : ['S1', 'S2', 'S3', 'S4'] },
@@ -1222,8 +1223,8 @@ function renderMaint() {
       next = `<div class="next">Lần tới: khi đạt <b>${nf(last.nextKm)} km</b></div>`;
     }
     html += `<div class="mcard"><div class="k">LẦN BẢO DƯỠNG GẦN NHẤT</div>
-      <div class="big">${fmtDate(d)}</div>
-      <div class="sub">${ago <= 0 ? 'hôm nay' : relDay(d)}${last.km ? ` · ${nf(last.km)} km` : ''}${last.place ? ` · ${esc(last.place)}` : ''}</div>
+      ${last.km ? `<div class="big km">${nf(last.km)} km</div>` : `<div class="big">${fmtDate(d)}</div>`}
+      <div class="sub">${last.km ? `${fmtDate(d)} · ` : ''}${ago <= 0 ? 'hôm nay' : relDay(d)}${last.place ? ` · ${esc(last.place)}` : ''}</div>
       ${next}</div>`;
   } else {
     html += `<div class="mcard"><div class="k">LẦN BẢO DƯỠNG GẦN NHẤT</div><div class="sub" style="color:var(--muted)">Chưa có dữ liệu ${t === 'bike' ? 'xe máy' : 'ô tô'}.</div></div>`;
