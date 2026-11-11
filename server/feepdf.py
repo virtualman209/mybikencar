@@ -166,20 +166,35 @@ def parse_sunponte(text: str, qr: str, subject: str = "", body: str = "") -> dic
     return fee
 
 
-def parse_pdf(data: bytes, subject: str = "", body: str = "") -> dict | None:
+def parse_pdf_why(data: bytes, subject: str = "", body: str = ""):
+    """(phí, "") hoặc (None, lý do không đọc được) — lý do hiện cho chủ nhà xem."""
     try:
         text = pdf_text(data)
     except Exception as e:  # noqa: BLE001 — PDF hỏng / có mật khẩu
         print("pdf error:", e)
-        return None
+        return None, "không mở được file PDF"
+    if len(re.sub(r"\s", "", text)) < 30:
+        return None, "PDF chỉ có hình (không có chữ để đọc)"
     kind = which(text)
+    if not kind:
+        low = (subject + " " + body).lower()
+        if "seasons" in low:
+            kind = "seasons"
+        elif "ponte" in low or "sungroup" in low:
+            kind = "sunponte"
+        else:
+            return None, "không phải phiếu báo phí Seasons Avenue / Sun Ponte"
     if kind == "seasons":
-        return parse_seasons(text, subject)
-    if kind == "sunponte":
-        try:
-            qr = pdf_qr(data)
-        except Exception as e:  # noqa: BLE001
-            print("qr error:", e)
-            qr = ""
-        return parse_sunponte(text, qr, subject, body)
-    return None
+        fee = parse_seasons(text, subject)
+        return (fee, "") if fee else (None, "không thấy tổng tiền / số tài khoản trong phiếu Seasons Avenue")
+    try:
+        qr = pdf_qr(data)
+    except Exception as e:  # noqa: BLE001
+        print("qr error:", e)
+        qr = ""
+    fee = parse_sunponte(text, qr, subject, body)
+    return (fee, "") if fee else (None, "không thấy số tiền trong phiếu Sun Ponte")
+
+
+def parse_pdf(data: bytes, subject: str = "", body: str = "") -> dict | None:
+    return parse_pdf_why(data, subject, body)[0]

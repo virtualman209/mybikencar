@@ -119,7 +119,7 @@ def pdf_parts(msg):
     return out
 
 
-def fees_from_message(mid: str, subject: str, sender: str, received: int, text: str, pdfs, seen: set):
+def fees_from_message(mid: str, subject: str, sender: str, received: int, text: str, pdfs, seen: set, fails: dict | None = None):
     """Một email -> danh sách (phí, dữ liệu PDF hoặc None). Email báo phí gửi xe: đọc nội dung;
     email có PDF (phí dịch vụ Seasons Avenue, Sun Ponte): đọc từng PDF. Đã đọc (kể cả không phải phí) thì thêm vào `seen`."""
     import feepdf
@@ -136,11 +136,16 @@ def fees_from_message(mid: str, subject: str, sender: str, received: int, text: 
         pid = "fee" + hashlib.sha1(f"{mid}|{name}".encode()).hexdigest()[:16]
         if pid in seen:
             continue
-        fee = feepdf.parse_pdf(data, subject, text)
+        fee, why = feepdf.parse_pdf_why(data, subject, text)
         if fee:
             out.append((fee | {"id": pid, "pdf": name}, data))
-        else:
-            seen.add(pid)
+            if fails is not None:
+                fails.pop(pid, None)
+        else:   # v1.8.1: chưa đọc được thì thử lại (tối đa 3 lần), ghi lý do để báo chủ nhà
+            f = (fails if fails is not None else {}).setdefault(pid, {"n": 0})
+            f.update(n=f["n"] + 1, subject=subject[:120], file=name[:80], why=why, at=received)
+            if f["n"] >= 3:
+                seen.add(pid)
     if pdfs and not any(f.get("kind") == "parking" for f, _ in out):
         seen.add(fid)
     for fee, _ in out:
@@ -148,7 +153,7 @@ def fees_from_message(mid: str, subject: str, sender: str, received: int, text: 
     return out
 
 
-def fetch_fees(user: str, password: str, keyword: str, seen: set, days: int = 45):
+def fetch_fees(user: str, password: str, keyword: str, seen: set, days: int = 45, fails: dict | None = None):
     """Đăng nhập Gmail (chỉ đọc), tìm email báo phí, trả về [(phí, PDF|None)] mới."""
     found = []
     M = imaplib.IMAP4_SSL("imap.gmail.com", 993, timeout=30)
@@ -173,7 +178,7 @@ def fetch_fees(user: str, password: str, keyword: str, seen: set, days: int = 45
                 received = int(parsedate_to_datetime(msg.get("Date")).timestamp() * 1000)
             except Exception:  # noqa: BLE001
                 received = 0
-            found += fees_from_message(mid, header(msg, "Subject"), header(msg, "From"), received, body_text(msg), pdf_parts(msg), seen)
+            found += fees_from_message(mid, header(msg, "Subject"), header(msg, "From"), received, body_text(msg), pdf_parts(msg), seen, fails)
     finally:
         try:
             M.logout()
@@ -244,16 +249,17 @@ SCRIPT_MANIFEST = """{
 }
 """
 
-SCRIPT_CODE = r"""// MyBike'nCar – tìm email báo phí (gửi xe, phí dịch vụ Seasons Avenue, Sun Ponte), CHỈ ĐỌC Gmail. Bản 2.
+SCRIPT_CODE = r"""// MyBike'nCar – tìm email báo phí (gửi xe, phí dịch vụ Seasons Avenue, Sun Ponte), CHỈ ĐỌC Gmail. Bản 3.
 // Dán nguyên đoạn này vào Code.gs, không cần sửa gì.
 const KEY = '__KEY__';
-const QUERY = '(from:seasons OR from:sungroup OR from:"sun ponte" OR "sun ponte") newer_than:60d';
+// Máy chủ OMV gửi kèm điều kiện tìm (q) để sau này đổi không phải dán lại mã; không có thì dùng QUERY.
+const QUERY = '(from:seasons OR "seasons avenue" OR from:sungroup OR "sun ponte") newer_than:60d';
 
 function doGet(e) {
   const p = (e && e.parameter) || {};
   if (p.key !== KEY) return out_({ ok: false, error: 'forbidden' });
-  if (p.ping) return out_({ ok: true, v: 2, account: Session.getEffectiveUser().getEmail() });
-  let q = QUERY;
+  if (p.ping) return out_({ ok: true, v: 3, account: Session.getEffectiveUser().getEmail() });
+  let q = p.q || QUERY;
   if (p.since && /^\d+$/.test(p.since)) q += ' after:' + p.since;
   const res = Gmail.Users.Messages.list('me', { q: q, maxResults: 30 });
   const items = [];
@@ -276,7 +282,7 @@ function doGet(e) {
     items.push({ messageId: h['message-id'] || r.id, date: Number(m.internalDate), from: h['from'] || '',
                  subject: h['subject'] || '', html: acc.html, text: acc.plain, pdfs: pdfs });
   });
-  return out_({ ok: true, v: 2, messages: items });
+  return out_({ ok: true, v: 3, messages: items });
 }
 
 function walk_(part, acc) {
@@ -311,7 +317,10 @@ function out_(o) {
   return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
 }
 """
-SCRIPT_V = 2
+SCRIPT_V = 3
+# Điều kiện tìm Gmail (đoạn mã bản 3 nhận qua tham số q). Email Seasons Avenue gửi từ seasonsavenue.….pmc@gmail.com
+# (không có chữ "seasons" đứng riêng) nên tìm thêm theo cụm "seasons avenue" trong tiêu đề / nội dung.
+QUERY = '(from:seasons OR "seasons avenue" OR from:sungroup OR "sun ponte") newer_than:60d'
 
 
 def _script_get(url: str, key: str, extra: str = ""):
@@ -359,9 +368,10 @@ def _b64(s: str) -> bytes:
     return base64.b64decode(s + "=" * (-len(s) % 4))
 
 
-def fetch_fees_script(url: str, key: str, seen: set, since: int = 0):
+def fetch_fees_script(url: str, key: str, seen: set, since: int = 0, fails: dict | None = None):
     """Gọi đoạn mã Google. Trả về ([(phí, PDF|None)], phiên bản đoạn mã)."""
-    d = _script_get(url, key, f"&since={int(since)}" if since else "")
+    import urllib.parse
+    d = _script_get(url, key, (f"&since={int(since)}" if since else "") + "&q=" + urllib.parse.quote(QUERY))
     found = []
     for m in d.get("messages") or []:
         mid = (m.get("messageId") or "").strip()
@@ -376,5 +386,5 @@ def fetch_fees_script(url: str, key: str, seen: set, since: int = 0):
                 continue
             if data[:5] == b"%PDF-":
                 pdfs.append((a.get("name") or "phi.pdf", data))
-        found += fees_from_message(mid, m.get("subject", ""), m.get("from", ""), int(m.get("date") or 0), text, pdfs, seen)
+        found += fees_from_message(mid, m.get("subject", ""), m.get("from", ""), int(m.get("date") or 0), text, pdfs, seen, fails)
     return found, int(d.get("v") or 1)

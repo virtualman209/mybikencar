@@ -370,7 +370,8 @@ def mail_mode(cfg: dict) -> str:
 def mail_public(cfg: dict) -> dict:
     mode = mail_mode(cfg)
     return {k: cfg.get(k) for k in ("user", "keyword", "lastCheck", "lastError", "lastFound")} | {
-        "configured": bool(mode), "mode": mode, "scriptOld": mode == "script" and bool(cfg.get("scriptOld")), "user": cfg.get("user") if mode == "imap" else (cfg.get("scriptAccount") or "Google Apps Script")}
+        "configured": bool(mode), "mode": mode, "scriptOld": mode == "script" and bool(cfg.get("scriptOld")),
+        "pdfFails": [{k: v.get(k) for k in ("subject", "file", "why", "n", "at")} for v in (cfg.get("pdfFails") or {}).values()][:10], "user": cfg.get("user") if mode == "imap" else (cfg.get("scriptAccount") or "Google Apps Script")}
 
 
 def mail_error(e: Exception) -> str:
@@ -390,15 +391,21 @@ def check_mail_now() -> dict:
         if not mode:
             return mail_public(cfg)
         seen = set(cfg.get("seen") or [])
+        if cfg.get("seenV") != 2:   # v1.8.1: bản 1.8.0 đánh dấu "đã xem" cả email chưa đọc được PDF -> xoá để đọc lại một lần
+            have = {r["id"] for r in q("SELECT id FROM records WHERE store='fees'")}
+            seen &= have
+            cfg.update(seenV=2, scriptSince=0)
+        fails = cfg.get("pdfFails") or {}
         try:
             if mode == "script":
                 since = int(cfg.get("scriptSince") or 0)
-                new, ver = feemail.fetch_fees_script(cfg["scriptUrl"], cfg["scriptKey"], seen, since - 7 * 86400 if since else 0)
+                new, ver = feemail.fetch_fees_script(cfg["scriptUrl"], cfg["scriptKey"], seen, since - 7 * 86400 if since else 0, fails)
                 cfg["scriptOld"] = ver < feemail.SCRIPT_V
                 if not cfg["scriptOld"]:
                     cfg["scriptSince"] = int(time.time())
             else:
-                new = feemail.fetch_fees(cfg["user"], cfg["password"], cfg.get("keyword", "seasons"), seen)
+                new = feemail.fetch_fees(cfg["user"], cfg["password"], cfg.get("keyword", "seasons"), seen, fails=fails)
+            cfg["pdfFails"] = dict(sorted(fails.items(), key=lambda kv: -(kv[1].get("at") or 0))[:20])
             for fee, pdf in new:
                 exists = q("SELECT 1 FROM records WHERE store='fees' AND id=?", (fee["id"],))
                 if not exists:
