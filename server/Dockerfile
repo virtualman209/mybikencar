@@ -3,7 +3,7 @@ ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 WORKDIR /app
 COPY server/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
-COPY server/app.py server/feemail.py server/ticklink.py server/gmail.html ./
+COPY server/app.py server/feemail.py server/feepdf.py server/ticklink.py server/gmail.html ./
 COPY index.html sw.js manifest.webmanifest icon-180.png icon-192.png icon-512.png ./static/
 EXPOSE 8000
 HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=3 \

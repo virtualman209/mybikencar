@@ -4,3 +4,6 @@ python-multipart==0.0.20
 qrcode==8.0
 pypng==0.20220715.0
 pywebpush==2.0.3
+pypdfium2==5.15.2
+zxing-cpp==3.1.1
+pillow==11.0.0

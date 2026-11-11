@@ -91,6 +91,8 @@ def fee_month(fee: dict) -> str:
 
 def on_fee_saved(old: dict | None, new: dict):
     """Gọi sau khi lưu một khoản phí. Vừa được đánh dấu đã trả -> xếp hàng tick TickTick."""
+    if new.get("kind") not in (None, "", "parking"):   # chỉ phí gửi xe mới có việc TickTick tương ứng
+        return
     fid = new.get("id")
     paid, was = new.get("paidAt"), (old or {}).get("paidAt")
     with _lock:

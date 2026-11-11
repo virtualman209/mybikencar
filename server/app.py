@@ -22,6 +22,8 @@ from fastapi.responses import FileResponse, JSONResponse, Response, StreamingRes
 import feemail
 import ticklink
 
+KINDS = {"service": "Phí dịch vụ Seasons Avenue", "sunponte": "Phí dịch vụ Sun Ponte"}
+
 DATA = Path(os.environ.get("DATA_DIR", "/app/data"))
 BACKUP = Path(os.environ.get("BACKUP_DIR", "/backup"))
 STATIC = Path(os.environ.get("STATIC_DIR", str(Path(__file__).parent / "static")))
@@ -338,6 +340,7 @@ def request_update():
 MAIL_CFG = DATA / "mail.json"
 PUSH_CFG = DATA / "push.json"
 VAPID_KEY = DATA / "vapid_private.pem"
+FEE_PDF = DATA / "feepdf"   # v1.8.0: PDF báo phí (Seasons Avenue, Sun Ponte) để xem lại
 _mail_lock = threading.Lock()
 _mail_wake = threading.Event()
 
@@ -367,7 +370,7 @@ def mail_mode(cfg: dict) -> str:
 def mail_public(cfg: dict) -> dict:
     mode = mail_mode(cfg)
     return {k: cfg.get(k) for k in ("user", "keyword", "lastCheck", "lastError", "lastFound")} | {
-        "configured": bool(mode), "mode": mode, "user": cfg.get("user") if mode == "imap" else (cfg.get("scriptAccount") or "Google Apps Script")}
+        "configured": bool(mode), "mode": mode, "scriptOld": mode == "script" and bool(cfg.get("scriptOld")), "user": cfg.get("user") if mode == "imap" else (cfg.get("scriptAccount") or "Google Apps Script")}
 
 
 def mail_error(e: Exception) -> str:
@@ -389,21 +392,49 @@ def check_mail_now() -> dict:
         seen = set(cfg.get("seen") or [])
         try:
             if mode == "script":
-                new = feemail.fetch_fees_script(cfg["scriptUrl"], cfg["scriptKey"], seen)
+                since = int(cfg.get("scriptSince") or 0)
+                new, ver = feemail.fetch_fees_script(cfg["scriptUrl"], cfg["scriptKey"], seen, since - 7 * 86400 if since else 0)
+                cfg["scriptOld"] = ver < feemail.SCRIPT_V
+                if not cfg["scriptOld"]:
+                    cfg["scriptSince"] = int(time.time())
             else:
                 new = feemail.fetch_fees(cfg["user"], cfg["password"], cfg.get("keyword", "seasons"), seen)
-            for fee in new:
+            for fee, pdf in new:
                 exists = q("SELECT 1 FROM records WHERE store='fees' AND id=?", (fee["id"],))
                 if not exists:
+                    if pdf:
+                        FEE_PDF.mkdir(parents=True, exist_ok=True)
+                        write_file(FEE_PDF / f"{fee['id']}.pdf", pdf)
                     save_record("fees", fee)
                     notify_fee(fee)
                 seen.add(fee["id"])
+            mark_replaced()
             cfg.update(lastCheck=int(time.time() * 1000), lastError=None, lastFound=len(new), seen=sorted(seen)[-500:])
         except Exception as e:  # noqa: BLE001
             msg = mail_error(e)
             cfg.update(lastCheck=int(time.time() * 1000), lastError=msg[:200])
         write_json(MAIL_CFG, cfg)
         return mail_public(cfg)
+
+
+def all_fees() -> list:
+    return [json.loads(r["data"]) for r in q("SELECT data FROM records WHERE store='fees'")]
+
+
+def mark_replaced():
+    """Cùng nơi + căn hộ + tháng có thông báo lần mới hơn -> khoản cũ chưa trả ghi replacedBy (không cần trả nữa)."""
+    groups = {}
+    for f in all_fees():
+        if f.get("kind") in KINDS and f.get("month"):
+            groups.setdefault((f["kind"], f.get("apartment") or "", f["month"]), []).append(f)
+    for fs in groups.values():
+        fs.sort(key=lambda f: (f.get("round") or 1, f.get("received") or 0))
+        last = fs[-1]
+        for f in fs:
+            want = None if f is last or f.get("paidAt") else last["id"]
+            if f.get("replacedBy") != want:
+                f["replacedBy"] = want
+                save_record("fees", f)
 
 
 def mail_loop():
@@ -504,16 +535,56 @@ def fee_qr(fid: str, tn: str = ""):
     if not rows:
         raise HTTPException(404)
     fee = json.loads(rows[0]["data"])
-    if not fee.get("bin"):
+    if not fee.get("bin") and not fee.get("qrPayload"):
         raise HTTPException(400, "Không rõ ngân hàng nhận")
     import io
     import qrcode
     import qrcode.image.pure
-    img = qrcode.make(feemail.vietqr_payload(fee["bin"], fee["accountNo"], fee.get("amount") or 0, tn),
+    # Sun Ponte gửi sẵn mã QR trong PDF: dùng nguyên chuỗi đó (không đổi nội dung chuyển khoản).
+    payload = fee.get("qrPayload") or feemail.vietqr_payload(fee["bin"], fee["accountNo"], fee.get("amount") or 0, tn)
+    img = qrcode.make(payload,
                       image_factory=qrcode.image.pure.PyPNGImage, box_size=10, border=3)
     buf = io.BytesIO()
     img.save(buf)
     return Response(buf.getvalue(), media_type="image/png", headers={"Cache-Control": "no-store"})
+
+
+@app.get("/api/fees")
+def list_fees():
+    """Cho VM Dashboard (mục Thanh toán phí): mọi khoản phí + trạng thái đọc Gmail."""
+    fees = sorted(all_fees(), key=lambda f: -(f.get("received") or 0))
+    for f in fees:
+        f["title"] = fee_title(f)
+        f["hasPdf"] = (FEE_PDF / f"{f['id']}.pdf").exists()
+    return {"fees": fees, "mail": mail_public(read_json(MAIL_CFG, {}))}
+
+
+@app.post("/api/fees/{fid}/paid")
+async def fee_paid(fid: str, request: Request):
+    """Đánh dấu đã trả / bỏ đánh dấu (VM Dashboard gọi). {"on": true|false}"""
+    rows = q("SELECT data FROM records WHERE store='fees' AND id=?", (check_id(fid),))
+    if not rows:
+        raise HTTPException(404, "Không tìm thấy khoản phí")
+    try:
+        body = await request.json()
+    except ValueError:
+        body = {}
+    old = json.loads(rows[0]["data"])
+    fee = dict(old, paidAt=(int(time.time() * 1000) if body.get("on", True) else None))
+    if fee["paidAt"] and old.get("paidAt"):
+        fee["paidAt"] = old["paidAt"]
+    save_record("fees", fee)
+    ticklink.on_fee_saved(old, fee)
+    mark_replaced()
+    return {"ok": True, "fee": fee}
+
+
+@app.get("/api/fees/{fid}/pdf")
+def fee_pdf(fid: str):
+    p = FEE_PDF / f"{check_id(fid)}.pdf"
+    if not p.exists():
+        raise HTTPException(404)
+    return FileResponse(p, media_type="application/pdf", headers={"Cache-Control": "private, max-age=86400"})
 
 
 # ---- web push (thông báo trên iPhone khi có phí mới)
@@ -553,12 +624,17 @@ def send_push(payload: dict) -> int:
     return sent
 
 
+def fee_title(fee: dict) -> str:
+    if fee.get("kind") in KINDS:
+        return KINDS[fee["kind"]]
+    return "Phí gửi " + ("ô tô" if fee.get("vehicle") == "car" else "xe máy")
+
+
 def notify_fee(fee: dict):
-    veh = "ô tô" if fee.get("vehicle") == "car" else "xe máy"
     due = fee.get("due") or ""
     due_txt = f" · hạn {due[8:10]}/{due[5:7]}" if len(due) == 10 else ""
     try:
-        send_push({"title": f"Phí gửi {veh}" + (f" tháng {fee['month']}" if fee.get("month") else ""),
+        send_push({"title": fee_title(fee) + (f" tháng {fee['month']}" if fee.get("month") else ""),
                    "body": f"{fee['amount']:,} đ".replace(",", ".") + due_txt + " · Bấm để thanh toán",
                    "url": f"./?fee={fee['id']}", "tag": fee["id"]})
     except Exception as e:  # noqa: BLE001

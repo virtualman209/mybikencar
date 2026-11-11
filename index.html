@@ -410,7 +410,7 @@ $('#btnSettings .g').innerHTML = IC.gear;
    Config: Seasons Avenue
    ========================================================= */
 /* App version – keep in sync with VERSION in sw.js */
-const APP_VERSION = 'v1.7.3';
+const APP_VERSION = 'v1.8.0';
 
 const VEH = {
   bike: { name: 'Xe máy', floors: ['M', '2', '3', '4'], zones: f => f === 'M' ? ['S1', 'S2', 'S3', 'S4', 'EV'] : ['S1', 'S2', 'S3', 'S4'] },
@@ -774,7 +774,10 @@ function render() {
 const vehName = v => v === 'bike' ? 'xe máy' : 'ô tô';
 const money = n => nf(n || 0) + ' đ';
 function noAccent(s) { return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').replace(/[^\x20-\x7e]/g, ''); }
-const unpaidFees = () => S.fees.filter(f => !f.paidAt).sort((a, b) => (a.due || '9').localeCompare(b.due || '9'));
+// v1.8.0: máy chủ còn đọc phí dịch vụ Seasons Avenue / Sun Ponte (trả ở VM Dashboard); app này chỉ liệt kê phí gửi xe.
+const isPark = f => !f.kind || f.kind === 'parking';
+const feeName = f => isPark(f) ? `Phí gửi ${vehName(f.vehicle)}` : (f.kind === 'sunponte' ? 'Phí dịch vụ Sun Ponte' : 'Phí dịch vụ Seasons Avenue');
+const unpaidFees = () => S.fees.filter(f => isPark(f) && !f.paidAt).sort((a, b) => (a.due || '9').localeCompare(b.due || '9'));
 function dueInfo(f) {
   if (!f.due) return { txt: '', cls: '' };
   const left = daysBetween(Date.now(), parseISO(f.due));
@@ -785,8 +788,9 @@ function dueInfo(f) {
 // Nội dung chuyển khoản: chỉ chữ không dấu, số và dấu cách (ngân hàng hay lỗi với dấu và ký tự đặc biệt).
 const cleanNote = s => noAccent(s).replace(/[^A-Za-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
 const cleanPlate = s => noAccent(s).replace(/[^A-Za-z0-9]+/g, '').toUpperCase();
-const noteMissing = f => { const p = S.profile || {}; return !(p.apartment || '').trim() || !cleanPlate(f.vehicle === 'bike' ? p.plateBike : p.plateCar); };
+const noteMissing = f => { if (!isPark(f)) return false; const p = S.profile || {}; return !(p.apartment || '').trim() || !cleanPlate(f.vehicle === 'bike' ? p.plateBike : p.plateCar); };
 function transferNote(f) {
+  if (!isPark(f)) return cleanNote(f.note || '');
   const p = S.profile || {};
   const apt = (p.apartment || '').trim(), plate = cleanPlate((f.vehicle === 'bike' ? p.plateBike : p.plateCar) || '');
   const tpl = f.descTemplate || '[số căn hộ] đóng phí gửi xe tháng [...] cho xe [biển số]';
@@ -845,6 +849,7 @@ function paySheet(f) {
     <div class="pay-sub">${f.month ? 'Tháng ' + esc(f.month) : ''}${f.due ? ` · hạn ${fmtDate(parseISO(f.due))}` : ''}${d.txt && !f.paidAt ? ` · <span class="${d.cls}">${d.txt}</span>` : ''}</div>
     ${f.paidAt ? `<div class="paid-box">✓ Đã thanh toán lúc ${fmtTime(f.paidAt)} ngày ${fmtDate(f.paidAt)}<small class="tt-line" style="display:block;margin-top:4px"></small></div>` : ''}
     <div class="lbl">Chuyển tới</div>
+    ${f.replacedBy ? `<div class="warn-line">Đã có thông báo phí mới hơn cho tháng này, không cần trả khoản này.</div>` : ''}
     <div class="kv"><span>${esc(f.accountName || 'Ban quản lý')}</span><small>${esc(f.bank || '')}</small></div>
     <div class="copy-row"><b>${esc(f.accountNo)}</b><button class="cp" data-c="acc">Chép</button></div>
     <div class="copy-row"><b>${nf(f.amount)}</b><button class="cp" data-c="amt">Chép</button></div>
@@ -852,7 +857,7 @@ function paySheet(f) {
     <textarea class="field note-in" rows="2">${esc(note)}</textarea>
     ${missing ? `<div class="warn-line">Chưa có số căn hộ / biển số. <button class="link prof">Nhập một lần</button> để app tự điền.</div>` : ''}
     <div class="btn-row mt"><button class="btn cp" data-c="note">Chép nội dung</button></div>
-    ${f.bin ? `<div class="lbl">Trả bằng Techcombank · 2 bước</div>
+    ${f.bin || f.qrPayload ? `<div class="lbl">Trả bằng Techcombank · 2 bước</div>
     <div class="paysteps">
       <button class="btn primary saveqr"><span class="stepn">1</span>Lưu mã QR vào Ảnh</button>
       <small>Bảng chia sẻ hiện lên → chọn <b>Lưu hình ảnh</b>.</small>
@@ -863,7 +868,7 @@ function paySheet(f) {
     ${f.paidAt ? `<button class="btn danger mt unpaid">Bỏ đánh dấu đã trả</button>` : `<button class="btn ok mt paid">✓ Tôi đã chuyển khoản xong</button>`}
     <div class="help mt">Techcombank không cho app khác mở thẳng màn hình chuyển tiền, nên app dùng mã QR để Techcombank tự điền thông tin.</div>
   </div>`);
-  const sh = openSheet({ title: `Phí gửi ${vehName(f.vehicle)}`, titleIcon: f.vehicle === 'bike' ? 'bike' : 'car', acc: f.vehicle === 'bike' ? 'bike' : 'car', body });
+  const sh = openSheet({ title: feeName(f), titleIcon: f.vehicle === 'bike' ? 'bike' : 'car', acc: f.vehicle === 'bike' ? 'bike' : 'car', body });
   if (f.paidAt && Sync.on) tickStatus(f.id).then(t => { const el = $('.tt-line', body); if (el) el.innerHTML = tickLine(t); });
   const cur = () => cleanNote($('.note-in', body).value);
   const qrSrc = () => `api/fees/${encodeURIComponent(f.id)}/qr.png?tn=${encodeURIComponent(cur())}`;
@@ -981,7 +986,7 @@ function gmailSheet(info, after) {
 }
 
 async function feeCenter() {
-  const list = [...S.fees].sort((a, b) => (!!a.paidAt - !!b.paidAt) || (b.received || 0) - (a.received || 0));
+  const list = S.fees.filter(isPark).sort((a, b) => (!!a.paidAt - !!b.paidAt) || (b.received || 0) - (a.received || 0));
   const p = S.profile || {};
   const body = h(`<div>
     ${list.length ? `<div class="list">${list.map(f => `<button class="hrow" data-id="${f.id}" style="--acc:var(--${f.vehicle === 'bike' ? 'bike' : 'car'})">
@@ -1003,7 +1008,7 @@ async function feeCenter() {
     const t = $('.gm-txt', body);
     if (!info.configured) { t.innerHTML = '<b style="color:var(--bike)">Chưa kết nối</b> · bấm để kết nối'; return; }
     $('.chk', body).classList.remove('hidden');
-    t.innerHTML = `${info.mode === 'script' ? 'Không mật khẩu · ' : ''}${esc(info.user)}<br>${info.lastError ? `<span style="color:var(--warn)">${esc(info.lastError)}</span>` : `<span style="color:var(--ok)">Đang hoạt động</span>`}${info.lastCheck ? ` · kiểm tra lúc ${fmtTime(info.lastCheck)}` : ''}`;
+    t.innerHTML = `${info.mode === 'script' ? 'Không mật khẩu · ' : ''}${esc(info.user)}<br>${info.scriptOld ? '<b style="color:var(--warn)">Đoạn mã Google đã cũ: bấm vào đây, chép lại mã mới để đọc thêm phí dịch vụ Seasons Avenue và Sun Ponte</b><br>' : ''}${info.lastError ? `<span style="color:var(--warn)">${esc(info.lastError)}</span>` : `<span style="color:var(--ok)">Đang hoạt động</span>`}${info.lastCheck ? ` · kiểm tra lúc ${fmtTime(info.lastCheck)}` : ''}`;
   };
   Sync.fetch('api/mail', {}, 10000).then(r => r.json()).then(j => { info = j; showMail(); }).catch(() => { $('.gm-txt', body).textContent = 'Chưa kết nối được OMV'; });
   $('.gm', body).onclick = () => { sh.close(); setTimeout(() => gmailSheet(info, feeCenter), 250); };
