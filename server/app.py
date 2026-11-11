@@ -371,6 +371,7 @@ def mail_public(cfg: dict) -> dict:
     mode = mail_mode(cfg)
     return {k: cfg.get(k) for k in ("user", "keyword", "lastCheck", "lastError", "lastFound")} | {
         "configured": bool(mode), "mode": mode, "scriptOld": mode == "script" and bool(cfg.get("scriptOld")),
+        "scriptVer": cfg.get("scriptVer"), "scriptNeed": feemail.SCRIPT_V,
         "pdfFails": [{k: v.get(k) for k in ("subject", "file", "why", "n", "at")} for v in (cfg.get("pdfFails") or {}).values()][:10], "user": cfg.get("user") if mode == "imap" else (cfg.get("scriptAccount") or "Google Apps Script")}
 
 
@@ -391,16 +392,17 @@ def check_mail_now() -> dict:
         if not mode:
             return mail_public(cfg)
         seen = set(cfg.get("seen") or [])
-        if cfg.get("seenV") != 2:   # v1.8.1: bản 1.8.0 đánh dấu "đã xem" cả email chưa đọc được PDF -> xoá để đọc lại một lần
+        if cfg.get("seenV") != 3:   # v1.8.1/1.8.2: xoá "đã xem" của email không ra phí + lỗi cũ (báo nhầm) để đọc lại một lần
             have = {r["id"] for r in q("SELECT id FROM records WHERE store='fees'")}
             seen &= have
-            cfg.update(seenV=2, scriptSince=0)
+            cfg.update(seenV=3, scriptSince=0, pdfFails={})
         fails = cfg.get("pdfFails") or {}
         try:
             if mode == "script":
                 since = int(cfg.get("scriptSince") or 0)
                 new, ver = feemail.fetch_fees_script(cfg["scriptUrl"], cfg["scriptKey"], seen, since - 7 * 86400 if since else 0, fails)
                 cfg["scriptOld"] = ver < feemail.SCRIPT_V
+                cfg["scriptVer"] = ver
                 if not cfg["scriptOld"]:
                     cfg["scriptSince"] = int(time.time())
             else:

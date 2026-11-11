@@ -37,8 +37,15 @@ a{color:inherit}
 <body>
 <main>
   <h1>Kết nối Gmail không cần mật khẩu</h1>
-  <p class="lead">Một đoạn mã nhỏ chạy trong tài khoản Google của Ngài, chỉ có quyền <b>xem</b> email, và chỉ gửi về máy chủ OMV những email báo phí gửi xe của Seasons Avenue. Nên làm trên máy tính.</p>
+  <p class="lead">Một đoạn mã nhỏ chạy trong tài khoản Google của Ngài, chỉ có quyền <b>xem</b> email, và chỉ gửi về máy chủ OMV những email báo phí (gửi xe, phí dịch vụ Seasons Avenue, Sun Ponte). Nên làm trên máy tính.</p>
   <div class="status" id="status">Đang tải…</div>
+  <div class="status" id="upd" hidden style="border-color:var(--warn)"><b>Đã cài từ trước, chỉ cần cập nhật mã:</b>
+    <ol style="margin:8px 0 0;padding-left:20px">
+      <li>Mở dự án cũ trên <a href="https://script.google.com/home" target="_blank" rel="noopener"><b>script.google.com</b></a> → tệp <b class="k">Code.gs</b> → xoá hết → dán đoạn mã ở bước 4 bên dưới → <b class="k">💾 Lưu</b>.</li>
+      <li>Bấm <b class="k">Triển khai</b> → <b class="k">Quản lý các bản triển khai</b> → biểu tượng <b class="k">✏ Sửa</b> → ô <b class="k">Phiên bản</b> chọn <b class="k">Phiên bản mới</b> → <b class="k">Triển khai</b>. (Cách này giữ nguyên đường link, không phải dán lại.)</li>
+      <li>Lỡ bấm <b class="k">Tùy chọn triển khai mới</b> thì Google tạo đường link mới: chép link đó dán vào ô ở bước 7 rồi bấm <b class="k">Lưu và kiểm tra</b>.</li>
+      <li>Quay lại trang này: dòng trên phải báo <b>mã bản __NEED__ ✓</b>.</li>
+    </ol></div>
   <ol>
     <li>Đăng nhập đúng tài khoản Gmail nhận email báo phí, rồi mở <a href="https://script.google.com/home/projects/create" target="_blank" rel="noopener"><b>script.google.com → Dự án mới</b></a>.</li>
     <li>Bấm biểu tượng bánh răng <b class="k">⚙ Cài đặt dự án</b> ở cột trái → tích ô <b class="k">Hiển thị tệp kê khai "appsscript.json" trong trình chỉnh sửa</b>.</li>
@@ -54,7 +61,7 @@ a{color:inherit}
       <button class="save" id="save">Lưu và kiểm tra</button>
       <div class="msg" id="msg"></div></li>
   </ol>
-  <p><small>Muốn ngắt: vào myaccount.google.com → Bảo mật → Ứng dụng và dịch vụ bên thứ ba → gỡ quyền của dự án này. Đoạn mã chỉ đọc 30 email gần nhất của người gửi có chữ "seasons" trong 60 ngày.</small></p>
+  <p><small>Muốn ngắt: vào myaccount.google.com → Bảo mật → Ứng dụng và dịch vụ bên thứ ba → gỡ quyền của dự án này. Đoạn mã chỉ đọc tối đa 30 email báo phí của Seasons Avenue / Sun Ponte trong 60 ngày.</small></p>
 </main>
 <script>
 const $ = s => document.querySelector(s);
@@ -64,7 +71,10 @@ async function status() {
     const j = await (await fetch('api/mail', { cache: 'no-store' })).json();
     $('#status').innerHTML = !j.configured ? 'Chưa kết nối Gmail.'
       : `Đang dùng: <b>${j.mode === 'script' ? 'Apps Script (không mật khẩu)' : 'mật khẩu ứng dụng'}</b> · ${esc(j.user)}` +
-        (j.lastError ? ` · <span class="err">${esc(j.lastError)}</span>` : j.lastCheck ? ` · <span class="ok">kiểm tra lúc ${new Date(j.lastCheck).toLocaleTimeString('vi-VN')}</span>` : '');
+        (j.lastError ? ` · <span class="err">${esc(j.lastError)}</span>` : j.lastCheck ? ` · <span class="ok">kiểm tra lúc ${new Date(j.lastCheck).toLocaleTimeString('vi-VN')}</span>` : '') +
+        (j.mode === 'script' && j.scriptVer ? (j.scriptOld ? ` · <span class="err">mã bản ${j.scriptVer} (cũ, cần bản ${j.scriptNeed})</span>` : ` · <span class="ok">mã bản ${j.scriptVer} ✓</span>`) : '');
+    $('#upd').hidden = !(j.mode === 'script' && j.scriptOld);
+    $('#upd').innerHTML = $('#upd').innerHTML.replace('__NEED__', j.scriptNeed || '');
   } catch { $('#status').textContent = 'Không kết nối được máy chủ OMV.'; }
 }
 (async () => {

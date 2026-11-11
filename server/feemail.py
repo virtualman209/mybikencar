@@ -119,19 +119,24 @@ def pdf_parts(msg):
     return out
 
 
+BILL_SUBJECT = re.compile(r"ph[ií]|debit|fee", re.I)                   # tiêu đề có chữ "phí"
+PARKING_SUBJECT = re.compile(r"(đỗ|gửi|giữ)\s*xe|vé\s*xe", re.I)          # phí gửi xe: đọc nội dung email, không đọc PDF
+
+
 def fees_from_message(mid: str, subject: str, sender: str, received: int, text: str, pdfs, seen: set, fails: dict | None = None):
-    """Một email -> danh sách (phí, dữ liệu PDF hoặc None). Email báo phí gửi xe: đọc nội dung;
-    email có PDF (phí dịch vụ Seasons Avenue, Sun Ponte): đọc từng PDF. Đã đọc (kể cả không phải phí) thì thêm vào `seen`."""
+    """Một email -> danh sách (phí, dữ liệu PDF hoặc None). Email báo phí gửi xe: đọc nội dung (PDF kèm theo bỏ qua);
+    email có PDF (phí dịch vụ Seasons Avenue, Sun Ponte): đọc từng PDF. Đã đọc (kể cả không phải phí) thì thêm vào `seen`.
+    Chỉ ghi `fails` (báo chủ nhà) khi tiêu đề là email báo phí mà PDF đọc không ra."""
     import feepdf
     out = []
     fid = "fee" + hashlib.sha1(mid.encode()).hexdigest()[:16]
-    if fid not in seen:
-        fee = parse_fee(text)
-        if fee:
-            fee.update(kind="parking")
-            out.append((fee | {"id": fid}, None))
-        elif not pdfs:
-            seen.add(fid)
+    park = parse_fee(text)
+    if park and fid not in seen:
+        park.update(kind="parking")
+        out.append((park | {"id": fid}, None))
+    seen.add(fid) if not park else None
+    if park or PARKING_SUBJECT.search(subject or "") or not BILL_SUBJECT.search(subject or ""):
+        pdfs = []  # thông báo khác của Ban quản lý (tìm nhà thầu…) cũng bỏ qua          # v1.8.2: email phí gửi xe — không đọc PDF (thường là ảnh scan), không báo lỗi
     for name, data in pdfs or []:
         pid = "fee" + hashlib.sha1(f"{mid}|{name}".encode()).hexdigest()[:16]
         if pid in seen:
@@ -141,13 +146,13 @@ def fees_from_message(mid: str, subject: str, sender: str, received: int, text: 
             out.append((fee | {"id": pid, "pdf": name}, data))
             if fails is not None:
                 fails.pop(pid, None)
-        else:   # v1.8.1: chưa đọc được thì thử lại (tối đa 3 lần), ghi lý do để báo chủ nhà
+        elif why.startswith("không phải"):
+            seen.add(pid)  # thông báo khác của Ban quản lý (tìm nhà thầu…): bỏ qua, không báo
+        else:   # chưa đọc được thì thử lại (tối đa 3 lần), ghi lý do để báo chủ nhà
             f = (fails if fails is not None else {}).setdefault(pid, {"n": 0})
             f.update(n=f["n"] + 1, subject=subject[:120], file=name[:80], why=why, at=received)
             if f["n"] >= 3:
                 seen.add(pid)
-    if pdfs and not any(f.get("kind") == "parking" for f, _ in out):
-        seen.add(fid)
     for fee, _ in out:
         fee.update(subject=subject, sender=sender, received=received, paidAt=None)
     return out

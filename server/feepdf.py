@@ -177,13 +177,7 @@ def parse_pdf_why(data: bytes, subject: str = "", body: str = ""):
         return None, "PDF chỉ có hình (không có chữ để đọc)"
     kind = which(text)
     if not kind:
-        low = (subject + " " + body).lower()
-        if "seasons" in low:
-            kind = "seasons"
-        elif "ponte" in low or "sungroup" in low:
-            kind = "sunponte"
-        else:
-            return None, "không phải phiếu báo phí Seasons Avenue / Sun Ponte"
+        return None, "không phải phiếu báo phí Seasons Avenue / Sun Ponte"
     if kind == "seasons":
         fee = parse_seasons(text, subject)
         return (fee, "") if fee else (None, "không thấy tổng tiền / số tài khoản trong phiếu Seasons Avenue")
