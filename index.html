@@ -20,7 +20,7 @@
   --soft:#ECE6DE; --soft2:#F1ECE5;
   --bike:#EE4E17; --car:#DE1149;
   --slab:#E58C7D; --slab-side:#C9705F; --slab-mid:#FFFFFF; --slab-mid-side:#DDD6CC;
-  --ok:#1E8A4C; --warn:#C7361B; --gold:#C98A00;
+  --ok:#1E8A4C; --warn:#C7361B; --gold:#C98A00; --on-ok:#fff;
   --r:18px;
   --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
   color-scheme:light dark;
@@ -31,7 +31,7 @@
     --soft:#2A2825; --soft2:#23211F;
     --bike:#FF6B3D; --car:#FF4677;
     --slab:#B9675A; --slab-side:#8E4C41; --slab-mid:#3A3733; --slab-mid-side:#2A2825;
-    --ok:#4CC27F; --warn:#FF6B4F; --gold:#FFC83D;
+    --ok:#4CC27F; --warn:#FF6B4F; --gold:#FFC83D; --on-ok:#0E1F15;
   }
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -166,6 +166,8 @@ svg{display:block}
   background:var(--soft);color:var(--ink)}
 .btn:active{filter:brightness(.94)}
 .btn.primary{background:var(--acc,var(--ink));color:#fff}
+.btn.primary.ink{background:var(--ink);color:var(--bg)}
+.btn.ok{background:var(--ok);color:var(--on-ok)}
 .btn.danger{background:transparent;color:var(--warn)}
 .btn[disabled]{opacity:.35;pointer-events:none}
 .btn svg{width:20px;height:20px}
@@ -409,7 +411,7 @@ $('#btnSettings .g').innerHTML = IC.gear;
    Config: Seasons Avenue
    ========================================================= */
 /* App version – keep in sync with VERSION in sw.js */
-const APP_VERSION = 'v1.7.1';
+const APP_VERSION = 'v1.7.2';
 
 const VEH = {
   bike: { name: 'Xe máy', floors: ['M', '2', '3', '4'], zones: f => f === 'M' ? ['S1', 'S2', 'S3', 'S4', 'EV'] : ['S1', 'S2', 'S3', 'S4'] },
@@ -859,7 +861,7 @@ function paySheet(f) {
       <small>Trong Techcombank: <b>Quét QR</b> → biểu tượng <b>ảnh</b> → chọn mã vừa lưu. Số tài khoản, số tiền, nội dung tự điền sẵn, Ngài chỉ cần xác nhận. Trả xong có thể xoá ảnh mã QR trong Ảnh.</small>
     </div>
     <div class="qr-wrap"><img class="qr" alt="Mã VietQR"><small>Mã VietQR (quét được bằng điện thoại khác)</small></div>` : ''}
-    ${f.paidAt ? `<button class="btn danger mt unpaid">Bỏ đánh dấu đã trả</button>` : `<button class="btn mt paid" style="background:var(--ok);color:#fff">✓ Tôi đã chuyển khoản xong</button>`}
+    ${f.paidAt ? `<button class="btn danger mt unpaid">Bỏ đánh dấu đã trả</button>` : `<button class="btn ok mt paid">✓ Tôi đã chuyển khoản xong</button>`}
     <div class="help mt">Techcombank không cho app khác mở thẳng màn hình chuyển tiền, nên app dùng mã QR để Techcombank tự điền thông tin.</div>
   </div>`);
   const sh = openSheet({ title: `Phí gửi ${vehName(f.vehicle)}`, titleIcon: f.vehicle === 'bike' ? 'bike' : 'car', acc: f.vehicle === 'bike' ? 'bike' : 'car', body });
@@ -908,7 +910,7 @@ function profileSheet(after) {
     <div class="two"><div><div class="lbl">Biển số ô tô</div><input class="field" name="plateCar" placeholder="VD: 30A-123.45" autocomplete="off"></div>
       <div><div class="lbl">Biển số xe máy</div><input class="field" name="plateBike" placeholder="VD: 29B1-234.56" autocomplete="off"></div></div>
     <div class="help mt">Dùng để điền nội dung chuyển khoản theo mẫu của ban quản lý.</div>
-    <button class="btn primary mt save" style="--acc:var(--ink)">Lưu</button></div>`);
+    <button class="btn primary ink mt save">Lưu</button></div>`);
   for (const k of ['apartment', 'plateCar', 'plateBike']) $(`[name=${k}]`, body).value = p[k] || '';
   const sh = openSheet({ title: 'Thông tin căn hộ', body });
   $('.save', body).onclick = async () => {
@@ -943,7 +945,7 @@ function gmailSheet(info, after) {
     <div class="lbl">Cách 1 · Không cần mật khẩu (khuyên dùng)</div>
     <div class="help">Một đoạn mã nhỏ chạy trong tài khoản Google của Ngài, chỉ có quyền xem email, chỉ gửi về OMV các email báo phí. Làm một lần, khoảng 5 phút, <b>nên làm trên máy tính</b>.</div>
     <div class="copy-row" style="border-radius:12px;margin-top:8px"><b style="font-size:14px;word-break:break-all">${esc(link)}</b><button class="cp cplink">Chép</button></div>
-    <button class="btn primary mt open-guide" style="--acc:var(--ink)">Mở trang hướng dẫn</button>
+    <button class="btn primary ink mt open-guide">Mở trang hướng dẫn</button>
     <details class="mt" ${info.mode === 'imap' ? 'open' : ''}><summary class="lbl" style="cursor:pointer">Cách 2 · Mật khẩu ứng dụng Gmail</summary>
     <div class="lbl">Địa chỉ Gmail</div><input class="field" name="user" type="email" placeholder="ten@gmail.com" autocomplete="off" autocapitalize="off">
     <div class="lbl">Mật khẩu ứng dụng <span class="opt">(16 chữ, không phải mật khẩu Gmail)</span></div>
@@ -951,7 +953,7 @@ function gmailSheet(info, after) {
     <div class="lbl">Người gửi có chữ</div><input class="field" name="keyword" placeholder="seasons" autocomplete="off" autocapitalize="off">
     <div class="help mt"><b>Tạo mật khẩu ứng dụng:</b><ol><li>Tài khoản Google phải bật <b>Xác minh 2 bước</b>.</li><li>Mở <a href="https://myaccount.google.com/apppasswords" target="_blank">myaccount.google.com/apppasswords</a>.</li><li>Đặt tên "MyBikenCar" → <b>Tạo</b> → chép 16 chữ vào ô trên.</li></ol>Mật khẩu chỉ lưu trên máy OMV nhà, không lên GitHub. Muốn thu hồi thì xoá nó ở trang trên.</div>
     <div class="err warn-line hidden"></div>
-    <button class="btn primary mt save" style="--acc:var(--ink)">Lưu và kiểm tra</button></details>
+    <button class="btn primary ink mt save">Lưu và kiểm tra</button></details>
     ${info.configured ? '<button class="btn danger mt dis">Ngắt kết nối Gmail</button>' : ''}</div>`);
   $('.cplink', body).onclick = () => copyText(link, 'đường link');
   $('.open-guide', body).onclick = () => window.open(link, '_blank');
@@ -1342,7 +1344,7 @@ async function settings() {
     <button class="set-item syncnow">${IC.sync}<span><b>Đồng bộ ngay</b><small>Gửi thay đổi và tải dữ liệu mới nhất từ OMV</small></span></button>
     <button class="set-item fees">${IC.wallet}<span><b>Phí gửi xe</b><small>${unpaidFees().length ? `<b style="color:var(--warn)">${unpaidFees().length} khoản chưa trả</b>` : 'Email báo phí, thông tin căn hộ, thông báo'}</small></span></button>
     <div class="set-item upd" style="cursor:default;flex-wrap:wrap">${IC.download}<span style="flex:1"><b>Phiên bản ${esc(APP_VERSION)}</b><small class="upd-txt">Đang kiểm tra bản mới…</small></span>
-      <button class="btn primary upd-btn" style="--acc:var(--ink);height:40px;width:auto;padding:0 14px;font-size:14px">Cập nhật ngay</button></div>
+      <button class="btn primary ink upd-btn" style="height:40px;width:auto;padding:0 14px;font-size:14px">Cập nhật ngay</button></div>
     <div class="lbl">Sao lưu</div>` : ''}
     <button class="set-item mk">${IC.download}<span><b>Tạo bản sao lưu</b><small>${srv ? 'Lấy từ OMV: vị trí đỗ, lịch bảo dưỡng và toàn bộ ảnh' : 'Gồm vị trí đỗ, lịch bảo dưỡng và toàn bộ ảnh'}</small></span></button>
     <button class="set-item imp">${IC.upload}<span><b>Khôi phục từ bản sao lưu</b><small>${srv ? 'Chọn tệp .json, dữ liệu được gộp lên OMV' : 'Chọn tệp .json đã lưu trước đó'}</small></span></button>

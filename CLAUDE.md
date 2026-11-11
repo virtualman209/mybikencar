@@ -26,6 +26,7 @@ iPhone giữ đủ dữ liệu trong IndexedDB. Mọi thay đổi vào `outbox`,
 Máy `192.168.50.231`, Tailscale `100.78.213.85`. DAS = `/srv/dev-disk-by-uuid-63bcf028-ccf8-4a65-a3f2-0510da8ead2c`. Thư mục app `DAS/VM_bikencar/{web,data,backup}`.
 
 ## Nhật ký phiên bản
+- **v1.7.2** (11/11/2026) – Sửa nút trùng màu nền ở chế độ tối: nút nền chữ đậm (`.btn.primary.ink`: Cập nhật ngay, Lưu hồ sơ, Mở trang hướng dẫn, Lưu và kiểm tra) giờ chữ màu nền (`--bg`) thay cho trắng; nút "Tôi đã chuyển khoản xong" (`.btn.ok`) chữ tối trên nền xanh (`--on-ok`). Không dùng `--acc:var(--ink)` + chữ trắng nữa.
 - **v1.7.1** (11/11/2026) – Trang Bảo dưỡng, thẻ "Lần bảo dưỡng gần nhất": số km hiện chữ to màu vàng (`--gold`), ngày bảo dưỡng chuyển xuống dòng nhỏ. Chưa ghi km thì vẫn hiện ngày như cũ.
 - **v1.7.0** (05/11/2026) – Bấm **Tôi đã chuyển khoản xong** phí gửi ô tô (xe máy) -> máy chủ OMV tự đánh dấu xong việc "đóng vé xe ô tô tháng" trong TickTick qua VM-TickTick (đúng lần của tháng đó với việc lặp hằng tháng); app báo kết quả.
 - **v1.6.3** (02/11/2026) – Chặn chuột phải / chạm giữ (menu Sao chép, Mở trong tab mới…) trên nút, link và chỗ bấm được: `contextmenu` bị chặn khi bấm vào `a, button, [role=button], [onclick], label, summary, select, .btn` và ô nút / ô tick; `-webkit-touch-callout:none`. Chữ thường, ô nhập, ảnh (kể cả mã QR) vẫn giữ được. Trang `/gmail` cũng chặn phóng to + chuột phải.
