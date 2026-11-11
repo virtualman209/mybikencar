@@ -26,6 +26,7 @@ iPhone giữ đủ dữ liệu trong IndexedDB. Mọi thay đổi vào `outbox`,
 Máy `192.168.50.231`, Tailscale `100.78.213.85`. DAS = `/srv/dev-disk-by-uuid-63bcf028-ccf8-4a65-a3f2-0510da8ead2c`. Thư mục app `DAS/VM_bikencar/{web,data,backup}`.
 
 ## Nhật ký phiên bản
+- **v1.7.3** (11/11/2026) – Số km ở thẻ "Lần bảo dưỡng gần nhất" đổi từ vàng sang màu chính của xe (`--acc`: cam xe máy / hồng ô tô), đồng bộ với nút "Thêm lần bảo dưỡng". Bỏ biến `--gold`.
 - **v1.7.2** (11/11/2026) – Sửa nút trùng màu nền ở chế độ tối: nút nền chữ đậm (`.btn.primary.ink`: Cập nhật ngay, Lưu hồ sơ, Mở trang hướng dẫn, Lưu và kiểm tra) giờ chữ màu nền (`--bg`) thay cho trắng; nút "Tôi đã chuyển khoản xong" (`.btn.ok`) chữ tối trên nền xanh (`--on-ok`). Không dùng `--acc:var(--ink)` + chữ trắng nữa.
 - **v1.7.1** (11/11/2026) – Trang Bảo dưỡng, thẻ "Lần bảo dưỡng gần nhất": số km hiện chữ to màu vàng (`--gold`), ngày bảo dưỡng chuyển xuống dòng nhỏ. Chưa ghi km thì vẫn hiện ngày như cũ.
 - **v1.7.0** (05/11/2026) – Bấm **Tôi đã chuyển khoản xong** phí gửi ô tô (xe máy) -> máy chủ OMV tự đánh dấu xong việc "đóng vé xe ô tô tháng" trong TickTick qua VM-TickTick (đúng lần của tháng đó với việc lặp hằng tháng); app báo kết quả.
