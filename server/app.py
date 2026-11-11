@@ -549,12 +549,27 @@ def fee_qr(fid: str, tn: str = ""):
     return Response(buf.getvalue(), media_type="image/png", headers={"Cache-Control": "no-store"})
 
 
+def parking_note(f: dict, p: dict) -> str:
+    """Nội dung chuyển khoản phí gửi xe (giống transferNote trong app iPhone)."""
+    plate = re.sub(r"[^A-Za-z0-9]+", "", feemail.no_accent((p.get("plateBike") if f.get("vehicle") == "bike" else p.get("plateCar")) or "")).upper()
+    t = f.get("descTemplate") or "[số căn hộ] đóng phí gửi xe tháng [...] cho xe [biển số]"
+    t = re.sub(r"\[\s*số căn hộ\s*\]", (p.get("apartment") or "").strip() or "so can ho", t, flags=re.I)
+    t = re.sub(r"\[\s*(?:…|\.\.\.|tháng)\s*\]", f.get("month") or "", t, flags=re.I)
+    t = re.sub(r"\[\s*biển số\s*\]", plate or "bien so", t, flags=re.I)
+    return re.sub(r"\s+", " ", re.sub(r"[^A-Za-z0-9 ]+", " ", feemail.no_accent(t))).strip()
+
+
 @app.get("/api/fees")
 def list_fees():
     """Cho VM Dashboard (mục Thanh toán phí): mọi khoản phí + trạng thái đọc Gmail."""
     fees = sorted(all_fees(), key=lambda f: -(f.get("received") or 0))
+    prof = {}
+    for r in q("SELECT data FROM records WHERE store='prefs' AND id='profile'"):
+        prof = json.loads(r["data"])
     for f in fees:
         f["title"] = fee_title(f)
+        if f.get("kind") in (None, "", "parking") and not f.get("note"):
+            f["note"] = parking_note(f, prof)
         f["hasPdf"] = (FEE_PDF / f"{f['id']}.pdf").exists()
     return {"fees": fees, "mail": mail_public(read_json(MAIL_CFG, {}))}
 
