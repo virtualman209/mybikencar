@@ -95,9 +95,7 @@ svg{display:block}
 .cam:active{transform:translateY(1.5px);box-shadow:0 0 0 var(--line)}
 .cam svg{width:44px}
 
-.nav{margin-top:auto;padding-top:26px;display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
-.nav button{grid-column:span 2}
-.nav button.wide{grid-column:span 3}
+.nav{margin-top:auto;padding-top:26px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .nav button{border:1.5px solid var(--line);background:var(--card);border-radius:10px;min-height:78px;padding:8px 6px;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:14px;font-weight:600;line-height:1.15;text-align:center;
   box-shadow:0 1.5px 0 var(--line);transition:transform .12s,box-shadow .12s}
@@ -121,6 +119,12 @@ svg{display:block}
 .seg-ctl{display:flex;background:var(--soft);border-radius:12px;padding:3px;gap:3px;margin:4px 0 14px}
 .seg-ctl button{flex:1;height:36px;border-radius:9px;font-size:14px;font-weight:600;color:var(--muted)}
 .seg-ctl button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.seg-ctl.tabs{background:transparent;padding:0;gap:6px;margin-top:-4px}
+.seg-ctl.tabs button{border:1.25px solid var(--line);background:var(--card);position:relative;font-size:13px;padding:0 2px}
+.seg-ctl.tabs button.on{background:var(--acc);border-color:var(--acc);color:#fff;box-shadow:none}
+.seg-ctl.tabs .wdot{position:absolute;top:5px;right:7px;width:8px;height:8px;border-radius:50%;background:var(--bike)}
+.seg-ctl.tabs .wdot.late{background:var(--warn)}
+.seg-ctl.tabs button.on .wdot{background:#fff}
 
 .empty-state{text-align:center;color:var(--muted);padding:48px 16px;font-size:15px}
 .empty-state svg{width:48px;height:48px;margin:0 auto 10px;opacity:.5}
@@ -171,6 +175,13 @@ svg{display:block}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
 .chips button{height:36px;padding:0 12px;border-radius:10px;background:var(--soft);font-weight:650;font-size:14px}
 .chips button.on{background:var(--acc);color:#fff}
+.vinfo{background:var(--card);border-radius:14px;overflow:hidden}
+.vinfo button{display:flex;justify-content:space-between;align-items:baseline;gap:12px;width:100%;padding:11px 14px;text-align:left;border-top:1px solid var(--soft)}
+.vinfo button:first-child{border-top:0}
+.vinfo button:active{background:var(--soft2)}
+.vinfo span{color:var(--muted);font-size:14px;flex:none;max-width:45%}
+.vinfo b{font-weight:650;text-align:right;word-break:break-all}
+.vinfo b.mono{font-family:ui-monospace,Menlo,monospace;font-size:14px;letter-spacing:.3px}
 #remind:empty{display:none}
 #remind{display:flex;flex-direction:column;gap:8px;margin-top:14px}
 .rem{display:flex;align-items:center;gap:10px;text-align:left;width:100%;background:var(--card);border:1.25px solid var(--acc);border-radius:12px;padding:10px 12px}
@@ -340,17 +351,13 @@ textarea.field{min-height:84px;resize:vertical}
   <nav class="nav">
     <button id="navPhotos"><span data-icon="image"></span>Ảnh đã chụp<span class="badge" id="bPhotos"></span></button>
     <button id="navHistory"><span data-icon="clock"></span>Lịch sử đỗ xe<span class="badge" id="bHistory"></span></button>
-    <button id="navMaint"><span data-icon="wrench"></span>Lịch bảo dưỡng xe<span class="badge" id="bMaint"></span></button>
-    <button id="navReg" class="wide"><span data-icon="stamp"></span>Đăng kiểm<span class="badge" id="bReg"></span></button>
-    <button id="navIns" class="wide"><span data-icon="shield"></span>Bảo hiểm xe<span class="badge" id="bIns"></span></button>
+    <button id="navCare"><span data-icon="wrench"></span>Thông tin xe<span class="badge" id="bCare"></span></button>
   </nav>
 </main>
 
 <section class="page" id="pagePhotos"></section>
 <section class="page" id="pageHistory"></section>
-<section class="page" id="pageMaint"></section>
-<section class="page" id="pageReg"></section>
-<section class="page" id="pageIns"></section>
+<section class="page" id="pageCare"></section>
 
 <input type="file" id="camIn" accept="image/*" capture="environment" hidden>
 <input type="file" id="libIn" accept="image/*" multiple hidden>
@@ -435,7 +442,7 @@ $('#btnSettings .g').innerHTML = IC.gear;
    Config: Seasons Avenue
    ========================================================= */
 /* App version – keep in sync with VERSION in sw.js */
-const APP_VERSION = 'v1.9.0';
+const APP_VERSION = 'v1.9.1';
 
 const VEH = {
   bike: { name: 'Xe máy', floors: ['M', '2', '3', '4'], zones: f => f === 'M' ? ['S1', 'S2', 'S3', 'S4', 'EV'] : ['S1', 'S2', 'S3', 'S4'] },
@@ -595,10 +602,11 @@ function syncText() {
   if (Sync.state === 'offline') return `<b style="color:var(--warn)">Chưa kết nối được OMV</b> · ${last}`;
   return `<b style="color:var(--ok)">Đã đồng bộ</b> · ${last}`;
 }
-const S = { parkings: [], maint: [], docs: [], photos: [], fees: [], profile: {} };
+const S = { parkings: [], maint: [], docs: [], photos: [], fees: [], profile: {}, vehicles: {} };
 async function loadAll() {
   [S.parkings, S.maint, S.docs, S.photos, S.fees] = await Promise.all([DB.all('parkings'), DB.all('maint'), DB.all('docs'), DB.all('photos'), DB.all('fees')]);
   S.profile = (await DB.get('prefs', 'profile')) || { id: 'profile' };
+  S.vehicles = { bike: await DB.get('prefs', 'veh-bike'), car: await DB.get('prefs', 'veh-car') };
 }
 const latest = type => S.parkings.filter(p => p.type === type).sort((a, b) => b.ts - a.ts)[0];
 
@@ -651,7 +659,7 @@ async function addPhoto(file, kind, ref) {
 async function deletePhoto(id) {
   await DB.del('blobs', id); await DB.del('photos', id);
   S.photos = S.photos.filter(p => p.id !== id);
-  for (const [store, arr] of [['parkings', S.parkings], ['maint', S.maint], ['docs', S.docs]]) {
+  for (const [store, arr] of [['parkings', S.parkings], ['maint', S.maint], ['docs', S.docs], ['prefs', Object.values(S.vehicles).filter(Boolean)]]) {
     for (const r of arr) if (r.photoIds?.includes(id)) { r.photoIds = r.photoIds.filter(x => x !== id); await DB.put(store, r); }
   }
   for (const v of ['thumb', 'full']) { const k = id + ':' + v; if (urlCache.has(k)) { URL.revokeObjectURL(urlCache.get(k)); urlCache.delete(k); } }
@@ -786,16 +794,14 @@ function renderBadges() {
   $('#bPhotos').textContent = np ? `${np} ảnh` : '';
   $('#bHistory').textContent = S.parkings.length ? `${S.parkings.length} lần` : '';
   const last = [...S.maint].sort((a, b) => b.date.localeCompare(a.date))[0];
-  $('#bMaint').textContent = last ? `gần nhất ${fmtDate(parseISO(last.date))}` : '';
-  for (const [cat, el] of [['reg', '#bReg'], ['ins', '#bIns']]) {
-    const n = docDue().filter(d => d.cat === cat)[0];
-    $(el).textContent = n ? `${n.left < 0 ? 'đã hết hạn' : 'hạn'} ${fmtDate(parseISO(n.expiry))}` : '';
-    $(el).className = 'badge' + (n && n.left < 0 ? ' late' : n && n.left <= DOC_WARN ? ' soon' : '');
-  }
+  // Ưu tiên báo giấy tờ sắp / đã hết hạn; không có thì báo lần bảo dưỡng gần nhất.
+  const n = docDue()[0]; const b = $('#bCare');
+  if (n && n.left <= DOC_WARN) { b.textContent = `${n.cat === 'reg' ? 'đăng kiểm' : 'bảo hiểm'} ${n.left < 0 ? 'quá hạn' : 'còn ' + n.left + ' ngày'}`; b.className = 'badge ' + (n.left < 0 ? 'late' : 'soon'); }
+  else { b.textContent = last ? `bảo dưỡng ${fmtDate(parseISO(last.date))}` : ''; b.className = 'badge'; }
 }
 function render() {
   renderFees(); renderRemind(); renderStatus(); renderPlan(); renderBadges();
-  for (const [id, fn] of [['pagePhotos', renderPhotos], ['pageHistory', renderHistory], ['pageMaint', renderMaint], ['pageReg', renderReg], ['pageIns', renderIns]]) if ($('#' + id).classList.contains('open')) fn();
+  for (const [id, fn] of [['pagePhotos', renderPhotos], ['pageHistory', renderHistory], ['pageCare', renderCare]]) if ($('#' + id).classList.contains('open')) fn();
 }
 
 /* =========================================================
@@ -1069,8 +1075,7 @@ function openFeeFromUrl(url) {
   const dc = u.searchParams.get('doc');
   if (dc === 'reg' || dc === 'ins') {
     history.replaceState(null, '', location.pathname);
-    const t = u.searchParams.get('v'); if (t === 'bike' || t === 'car') pageState[dc] = t;
-    openDocPage(dc); return;
+    openCare(dc, u.searchParams.get('v')); return;
   }
   const id = u.searchParams.get('fee'); if (!id) return;
   history.replaceState(null, '', location.pathname);
@@ -1149,7 +1154,7 @@ function parkDetail(p) {
 /* =========================================================
    Pages
    ========================================================= */
-const pageState = { photos: 'all', history: 'all', maint: 'bike', reg: 'car', ins: 'bike' };
+const pageState = { photos: 'all', history: 'all', veh: 'bike', care: 'info' };
 function openPage(id, title, fn) {
   const pg = $('#' + id);
   pg.innerHTML = `<header class="page-h"><button class="back">${IC.back}Trang chủ</button></header>
@@ -1164,7 +1169,7 @@ function segCtl(opts, cur, onPick) {
 const emptyState = (ic, msg) => `<div class="empty-state">${icon(ic)}${esc(msg)}</div>`;
 
 /* ---------- Ảnh đã chụp ---------- */
-// "Ảnh đã chụp" only holds parking photos. Maintenance-receipt photos live only inside Lịch bảo dưỡng.
+// "Ảnh đã chụp" only holds parking photos. Receipt / document photos live only inside Thông tin xe.
 const parkingPhotos = () => S.photos.filter(p => p.kind === 'parking');
 const photoVeh = p => S.parkings.find(r => r.id === p.ref)?.type || null;
 function renderPhotos() {
@@ -1190,7 +1195,7 @@ function renderPhotos() {
   if (all.length) {
     const btn = h(`<button class="btn danger-fill clear mt">${IC.trash}Dọn sạch ảnh (${all.length})</button>`);
     btn.onclick = clearParkingPhotos; c.append(btn);
-    c.insertAdjacentHTML('beforeend', `<div class="help" style="text-align:center;margin-top:8px">Ảnh phiếu bảo dưỡng, giấy đăng kiểm và bảo hiểm nằm riêng trong mục của chúng và không bị xoá.</div>`);
+    c.insertAdjacentHTML('beforeend', `<div class="help" style="text-align:center;margin-top:8px">Ảnh phiếu bảo dưỡng, giấy đăng kiểm và bảo hiểm nằm riêng trong Thông tin xe và không bị xoá.</div>`);
   }
 }
 
@@ -1245,11 +1250,8 @@ function renderHistory() {
 }
 
 /* ---------- Lịch bảo dưỡng ---------- */
-function renderMaint() {
-  const c = $('#pageMaint .content'); c.innerHTML = '';
-  const t = pageState.maint;
-  c.style.setProperty('--acc', `var(--${t})`);
-  c.append(segCtl([['bike', 'Xe máy'], ['car', 'Ô tô']], t, k => { pageState.maint = k; renderMaint(); }));
+function renderMaint(c) {
+  const t = pageState.veh;
   const list = S.maint.filter(m => m.type === t).sort((a, b) => b.date.localeCompare(a.date) || b.ts - a.ts);
   const last = list[0];
   let html = '';
@@ -1331,7 +1333,6 @@ const DOC_WARN = 30;  // báo trước bao nhiêu ngày
 const INS_KINDS = [['tnds', 'TNDS bắt buộc'], ['vc', 'Vật chất (thân vỏ)'], ['other', 'Khác']];
 const insName = k => (INS_KINDS.find(x => x[0] === k) || INS_KINDS[0])[1];
 const docName = r => r.cat === 'reg' ? `Đăng kiểm ${vehName(r.type)}` : `Bảo hiểm ${r.kind === 'vc' ? 'vật chất' : r.kind === 'other' ? '' : 'TNDS '}${vehName(r.type)}`.replace('  ', ' ');
-const docTitle = c => c === 'reg' ? 'Đăng kiểm' : 'Bảo hiểm xe';
 const addMonths = (iso, n) => {
   const d = parseISO(iso); const day = d.getDate();
   d.setDate(1); d.setMonth(d.getMonth() + n);
@@ -1359,18 +1360,98 @@ function renderRemind() {
   el.innerHTML = list.map(r => `<button class="rem" data-cat="${r.cat}" data-t="${r.type}" style="--acc:var(--${r.left < 0 ? 'warn' : 'bike'})">
     ${icon(r.cat === 'reg' ? 'stamp' : 'shield')}<span><b>${esc(docName(r))}</b>${r.left < 0 ? 'Đã hết hạn' : 'Hết hạn'} ${fmtDate(parseISO(r.expiry))}</span>
     <span class="pill ${leftCls(r.left)}" style="flex:none">${leftTxt(r.left)}</span></button>`).join('');
-  $$('.rem', el).forEach(b => b.onclick = () => { pageState[b.dataset.cat] = b.dataset.t; openDocPage(b.dataset.cat); });
+  $$('.rem', el).forEach(b => b.onclick = () => openCare(b.dataset.cat, b.dataset.t));
 }
 
-function openDocPage(cat) { openPage(cat === 'reg' ? 'pageReg' : 'pageIns', docTitle(cat), cat === 'reg' ? renderReg : renderIns); }
-const renderReg = () => renderDocs('reg');
-const renderIns = () => renderDocs('ins');
+/* ---------- Hồ sơ xe (v1.9.1) ----------
+   Lưu trong kho `prefs`, id `veh-bike` / `veh-car`: { brand, model, year, color, vin, engine, owner, bought, note, photoIds }.
+   Biển số dùng chung với hồ sơ căn hộ (`profile.plateBike` / `profile.plateCar`) để nội dung chuyển khoản vẫn đúng. */
+const VEH_FIELDS = [
+  ['brand', 'Hãng xe', 'VD: Honda, Toyota, VinFast'], ['model', 'Dòng xe', 'VD: SH 160i, Vios G'],
+  ['year', 'Đời (năm sản xuất)', 'VD: 2023'], ['color', 'Màu xe', 'VD: Trắng ngọc trai'],
+  ['vin', 'Số khung', 'VD: RLHKF4100PY012345'], ['engine', 'Số máy', 'VD: KF41E-0123456'],
+  ['owner', 'Chủ xe', 'Tên trên giấy đăng ký'], ['bought', 'Ngày mua / đăng ký', ''],
+];
+const plateKey = t => t === 'bike' ? 'plateBike' : 'plateCar';
+const vehRec = t => S.vehicles[t] || { id: 'veh-' + t, photoIds: [] };
 
-function renderDocs(cat) {
-  const c = $(`#${cat === 'reg' ? 'pageReg' : 'pageIns'} .content`); if (!c) return; c.innerHTML = '';
-  const t = pageState[cat];
+function renderVehicle(c) {
+  const t = pageState.veh; const v = vehRec(t); const plate = (S.profile || {})[plateKey(t)] || '';
+  const rows = [['plate', 'Biển số', plate], ...VEH_FIELDS.map(([k, l]) => [k, l, k === 'bought' && v[k] ? fmtDate(parseISO(v[k])) : v[k]])].filter(r => r[2]);
+  const title = [v.brand, v.model].filter(Boolean).join(' ');
+  let html = `<div class="mcard"><div class="k">${t === 'bike' ? 'XE MÁY' : 'Ô TÔ'}</div>
+    <div class="big" style="font-size:26px">${esc(title || 'Chưa có thông tin')}</div>
+    ${v.year || plate ? `<div class="sub">${[v.year ? 'đời ' + esc(v.year) : '', plate ? esc(plate) : ''].filter(Boolean).join(' · ')}</div>` : ''}</div>`;
+  if (rows.length) html += `<div class="vinfo mt">${rows.map(([k, l, val]) => `<button data-copy="${esc(val)}"><span>${esc(l)}</span><b${['vin', 'engine', 'plate'].includes(k) ? ' class="mono"' : ''}>${esc(val)}</b></button>`).join('')}</div>
+    <div class="help" style="text-align:center;margin-top:6px">Bấm vào một dòng để chép (dán vào đơn bảo hiểm, đăng kiểm…)</div>`;
+  if (v.note) html += `<div class="h3">Ghi chú</div><div class="mrow" style="white-space:pre-line">${esc(v.note)}</div>`;
+  if (v.photoIds?.length) html += `<div class="h3">Ảnh giấy đăng ký xe (cà vẹt)</div><div class="thumbs vph">${v.photoIds.map(id => imgTag(id)).join('')}</div>`;
+  html += `<button class="btn primary mt edit">${title || rows.length ? 'Sửa hồ sơ xe' : `${IC.plus}Nhập hồ sơ ${vehName(t)}`}</button>`;
+  c.insertAdjacentHTML('beforeend', html);
+  $$('[data-copy]', c).forEach(b => b.onclick = async () => { try { await navigator.clipboard.writeText(b.dataset.copy); toast('Đã chép: ' + b.dataset.copy); } catch { toast(b.dataset.copy); } });
+  $$('.vph img', c).forEach((img, i) => img.onclick = () => viewer(v.photoIds, i));
+  $('.edit', c).onclick = () => vehicleSheet(t);
+  hydrate(c);
+}
+
+function vehicleSheet(t) {
+  const old = vehRec(t);
+  const st = { ...old, id: 'veh-' + t, photoIds: [...(old.photoIds || [])] };
+  const added = []; let saved = false;
+  const body = h(`<div>
+    <div class="lbl">Biển số</div><input class="field" name="plate" autocomplete="off" placeholder="${t === 'bike' ? 'VD: 29B1-234.56' : 'VD: 30A-123.45'}">
+    ${VEH_FIELDS.map(([k, l, ph]) => `<div class="lbl">${esc(l)}</div><input class="field" name="${k}" autocomplete="off"${k === 'bought' ? ' type="date"' : ''}${k === 'year' ? ' inputmode="numeric"' : ''}${['vin', 'engine'].includes(k) ? ' autocapitalize="characters" spellcheck="false"' : ''} placeholder="${esc(ph)}">`).join('')}
+    <div class="lbl">Ghi chú</div><textarea class="field" name="note" placeholder="VD: dung tích, cỡ lốp, loại dầu, nơi để giấy tờ gốc"></textarea>
+    <div class="lbl">Ảnh giấy đăng ký xe (cà vẹt)</div><div class="photo-row"></div>
+    <button class="btn primary save mt">Lưu</button></div>`);
+  $('[name=plate]', body).value = (S.profile || {})[plateKey(t)] || '';
+  for (const [k] of [...VEH_FIELDS, ['note']]) $(`[name=${k}]`, body).value = st[k] || '';
+  $('[name=year]', body).addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4); });
+  photoRow($('.photo-row', body), () => st.photoIds,
+    async files => { for (const m of await savePhotos(files, 'doc', st.id)) { st.photoIds.push(m.id); added.push(m.id); } },
+    async id => { await deletePhoto(id); st.photoIds = st.photoIds.filter(x => x !== id); },
+    ['Chụp giấy', 'Chọn ảnh']);
+  const sh = openSheet({ title: `Hồ sơ ${vehName(t)}`, titleIcon: t, acc: t, body,
+    onCancel: async () => { if (!saved) for (const id of added) await deletePhoto(id); render(); } });
+  $('.save', body).onclick = async () => {
+    for (const [k] of [...VEH_FIELDS, ['note']]) st[k] = $(`[name=${k}]`, body).value.trim();
+    for (const k of ['vin', 'engine']) st[k] = st[k].toUpperCase().replace(/\s+/g, '');
+    st.ts = Date.now();
+    await DB.put('prefs', st); S.vehicles[t] = st; saved = true;
+    const plate = $('[name=plate]', body).value.trim();
+    if (plate !== ((S.profile || {})[plateKey(t)] || '')) {
+      const p = { id: 'profile', ...(S.profile || {}), [plateKey(t)]: plate };
+      await DB.put('prefs', p); S.profile = p;
+    }
+    sh.close(); render(); toast('Đã lưu hồ sơ xe');
+  };
+}
+
+/* ---------- Thông tin xe: gộp Bảo dưỡng / Đăng kiểm / Bảo hiểm (v1.9.1) ---------- */
+function openCare(tab, veh) {
+  if (['info', 'maint', 'reg', 'ins'].includes(tab)) pageState.care = tab;
+  if (veh === 'bike' || veh === 'car') pageState.veh = veh;
+  openPage('pageCare', 'Thông tin xe', renderCare);
+}
+function renderCare() {
+  const c = $('#pageCare .content'); if (!c) return; c.innerHTML = '';
+  const t = pageState.veh;
   c.style.setProperty('--acc', `var(--${t})`);
-  c.append(segCtl([['bike', 'Xe máy'], ['car', 'Ô tô']], t, k => { pageState[cat] = k; renderDocs(cat); }));
+  c.append(segCtl([['bike', 'Xe máy'], ['car', 'Ô tô']], t, k => { pageState.veh = k; renderCare(); }));
+  const tabs = segCtl([['info', 'Hồ sơ'], ['maint', 'Bảo dưỡng'], ['reg', 'Đăng kiểm'], ['ins', 'Bảo hiểm']], pageState.care, k => { pageState.care = k; renderCare(); });
+  tabs.classList.add('tabs');
+  // Chấm cam / đỏ trên thẻ có giấy tờ của xe này sắp / đã hết hạn.
+  for (const cat of ['reg', 'ins']) {
+    const n = docDue().find(r => r.cat === cat && r.type === t && r.left <= DOC_WARN);
+    if (n) $(`[data-k=${cat}]`, tabs).insertAdjacentHTML('beforeend', `<span class="wdot${n.left < 0 ? ' late' : ''}"></span>`);
+  }
+  c.append(tabs);
+  const box = document.createElement('div'); c.append(box);
+  if (pageState.care === 'info') renderVehicle(box); else if (pageState.care === 'maint') renderMaint(box); else renderDocs(pageState.care, box);
+}
+
+function renderDocs(cat, c) {
+  const t = pageState.veh;
   const list = S.docs.filter(r => r.cat === cat && r.type === t).sort(docSort);
   const due = docDue().filter(r => r.cat === cat && r.type === t);
   let html = '<div class="dcards">';
@@ -1476,7 +1557,7 @@ function viewer(ids, start) {
     $('.v-count', el).textContent = ids.length > 1 ? `${i + 1} / ${ids.length}` : '';
     img.src = await photoURL(id, 'full');
     const dr = meta?.kind === 'doc' && S.docs.find(r => r.id === meta.ref);
-    let label = meta?.kind === 'receipt' ? 'Phiếu bảo dưỡng' : meta?.kind === 'doc' ? (dr ? docName(dr) : 'Giấy tờ xe') : 'Ảnh vị trí đỗ';
+    let label = meta?.kind === 'receipt' ? 'Phiếu bảo dưỡng' : meta?.kind === 'doc' ? (dr ? docName(dr) : /^veh-/.test(meta.ref || '') ? `Giấy đăng ký ${vehName(meta.ref.slice(4))}` : 'Giấy tờ xe') : 'Ảnh vị trí đỗ';
     const pr = meta?.kind === 'parking' && S.parkings.find(r => r.id === meta.ref);
     if (pr) label += ` · ${pr.type === 'bike' ? 'Xe máy' : 'Ô tô'} ${locText(pr)}`;
     $('.v-meta', el).textContent = `${label} · ${meta ? fmtDate(meta.ts) + ' ' + fmtTime(meta.ts) : ''}`;
@@ -1591,7 +1672,7 @@ async function settings() {
         mk.file = new File([await r.blob()], name, { type: 'application/json' });
       } else {
         const blobs = await DB.all('blobs');
-        const data = { app: 'mybikencar', v: 1, at: Date.now(), parkings: S.parkings, maint: S.maint, docs: S.docs, photos: S.photos,
+        const data = { app: 'mybikencar', v: 1, at: Date.now(), parkings: S.parkings, maint: S.maint, docs: S.docs, prefs: await DB.all('prefs'), photos: S.photos,
           blobs: blobs.map(b => ({ id: b.id, full: b64(b.full), thumb: b64(b.thumb) })) };
         mk.file = new File([JSON.stringify(data)], name, { type: 'application/json' });
       }
@@ -1615,7 +1696,7 @@ async function settings() {
           Sync.lastSig = ''; await Sync.run();
         } else {
           for (const b of d.blobs || []) await DB.put('blobs', { id: b.id, full: unb64(b.full), thumb: unb64(b.thumb) });
-          for (const s of ['photos', 'parkings', 'maint', 'docs']) for (const o of d[s] || []) await DB.put(s, o);
+          for (const s of ['photos', 'parkings', 'maint', 'docs', 'prefs']) for (const o of d[s] || []) await DB.put(s, o);
         }
         await loadAll(); render(); sh.close(); toast('Đã khôi phục dữ liệu');
       } catch (e) { alert('Không khôi phục được: ' + (e.message || 'chưa kết nối được OMV')); }
@@ -1648,9 +1729,7 @@ $('#btnCar').onclick = () => parkSheet('car');
 $('#btnSettings').onclick = settings;
 $('#navPhotos').onclick = () => openPage('pagePhotos', 'Ảnh đã chụp', renderPhotos);
 $('#navHistory').onclick = () => openPage('pageHistory', 'Lịch sử đỗ xe', renderHistory);
-$('#navMaint').onclick = () => openPage('pageMaint', 'Lịch bảo dưỡng xe', renderMaint);
-$('#navReg').onclick = () => openDocPage('reg');
-$('#navIns').onclick = () => openDocPage('ins');
+$('#navCare').onclick = () => openCare();
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { render(); Sync.kick(100); } });
 addEventListener('online', () => Sync.kick(100));
 setInterval(() => { if (!document.hidden) Sync.kick(0); }, 60000);
