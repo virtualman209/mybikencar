@@ -95,13 +95,17 @@ svg{display:block}
 .cam:active{transform:translateY(1.5px);box-shadow:0 0 0 var(--line)}
 .cam svg{width:44px}
 
-.nav{margin-top:auto;padding-top:26px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.nav{margin-top:auto;padding-top:26px;display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.nav button{grid-column:span 2}
+.nav button.wide{grid-column:span 3}
 .nav button{border:1.5px solid var(--line);background:var(--card);border-radius:10px;min-height:78px;padding:8px 6px;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:14px;font-weight:600;line-height:1.15;text-align:center;
   box-shadow:0 1.5px 0 var(--line);transition:transform .12s,box-shadow .12s}
 .nav button:active{transform:translateY(1.5px);box-shadow:0 0 0 var(--line)}
 .nav svg{width:24px;height:24px}
 .nav .badge{font-size:11px;font-weight:600;color:var(--muted)}
+.nav .badge.soon{color:var(--bike);font-weight:700}
+.nav .badge.late{color:var(--warn);font-weight:700}
 
 /* ---------- PAGES ---------- */
 .page{position:fixed;inset:0;background:var(--bg);z-index:20;overflow-y:auto;-webkit-overflow-scrolling:touch;
@@ -159,6 +163,20 @@ svg{display:block}
 .thumbs{display:flex;gap:6px;margin-top:8px}
 .thumbs img{width:44px;height:44px;border-radius:8px;object-fit:cover}
 .h3{font-size:15px;font-weight:800;margin:22px 2px 10px}
+/* đăng kiểm / bảo hiểm */
+.dcards{display:flex;flex-direction:column;gap:10px}
+.mcard .big.late{color:var(--warn)}
+.mrow .tagk{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:0 6px;margin-right:6px;background:var(--soft);color:var(--ink);vertical-align:1px}
+.mrow.old{opacity:.62}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips button{height:36px;padding:0 12px;border-radius:10px;background:var(--soft);font-weight:650;font-size:14px}
+.chips button.on{background:var(--acc);color:#fff}
+#remind:empty{display:none}
+#remind{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.rem{display:flex;align-items:center;gap:10px;text-align:left;width:100%;background:var(--card);border:1.25px solid var(--acc);border-radius:12px;padding:10px 12px}
+.rem svg{width:22px;height:22px;flex:none;color:var(--acc)}
+.rem span{flex:1;font-size:14px;line-height:1.3}
+.rem b{display:block;font-size:15px}
 
 /* ---------- BUTTONS / FORMS ---------- */
 .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:52px;border-radius:14px;font-weight:700;font-size:16px;
@@ -302,6 +320,7 @@ textarea.field{min-height:84px;resize:vertical}
   </div>
   <div class="install hidden" id="install"></div>
   <section id="fees"></section>
+  <section id="remind"></section>
 
   <div class="vehicles">
     <button class="veh" id="btnBike" style="--acc:var(--bike)">
@@ -322,12 +341,16 @@ textarea.field{min-height:84px;resize:vertical}
     <button id="navPhotos"><span data-icon="image"></span>Ảnh đã chụp<span class="badge" id="bPhotos"></span></button>
     <button id="navHistory"><span data-icon="clock"></span>Lịch sử đỗ xe<span class="badge" id="bHistory"></span></button>
     <button id="navMaint"><span data-icon="wrench"></span>Lịch bảo dưỡng xe<span class="badge" id="bMaint"></span></button>
+    <button id="navReg" class="wide"><span data-icon="stamp"></span>Đăng kiểm<span class="badge" id="bReg"></span></button>
+    <button id="navIns" class="wide"><span data-icon="shield"></span>Bảo hiểm xe<span class="badge" id="bIns"></span></button>
   </nav>
 </main>
 
 <section class="page" id="pagePhotos"></section>
 <section class="page" id="pageHistory"></section>
 <section class="page" id="pageMaint"></section>
+<section class="page" id="pageReg"></section>
+<section class="page" id="pageIns"></section>
 
 <input type="file" id="camIn" accept="image/*" capture="environment" hidden>
 <input type="file" id="libIn" accept="image/*" multiple hidden>
@@ -373,6 +396,8 @@ const IC = {
   image: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="9" cy="10" r="1.8"/><path d="m21 16-5-5-9 9"/></svg>`,
   clock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>`,
   wrench: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L3.5 17.3a1.8 1.8 0 0 0 2.5 2.5l5.8-5.8a4 4 0 0 0 5.2-5.4l-2.6 2.6-2.4-.5-.5-2.4z"/></svg>`,
+  stamp: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8 8h8M8 12h5"/><circle cx="15.5" cy="16" r="2.3"/><path d="m8 16 1.3 1.3L12 14.6"/></svg>`,
+  shield: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.2 7.5 9.5 4.3-1.3 7.5-4.9 7.5-9.5V6z"/><path d="m8.8 12 2.2 2.2 4.3-4.4"/></svg>`,
   gear: `<svg viewBox="0 0 24 24" width="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>`,
   back: `<svg viewBox="0 0 24 24" width="26" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg>`,
   x: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>`,
@@ -410,7 +435,7 @@ $('#btnSettings .g').innerHTML = IC.gear;
    Config: Seasons Avenue
    ========================================================= */
 /* App version – keep in sync with VERSION in sw.js */
-const APP_VERSION = 'v1.8.3';
+const APP_VERSION = 'v1.9.0';
 
 const VEH = {
   bike: { name: 'Xe máy', floors: ['M', '2', '3', '4'], zones: f => f === 'M' ? ['S1', 'S2', 'S3', 'S4', 'EV'] : ['S1', 'S2', 'S3', 'S4'] },
@@ -426,14 +451,14 @@ function locText(p) {
 /* =========================================================
    Storage (IndexedDB – private to this app, never Photos)
    ========================================================= */
-const SYNCED = new Set(['parkings', 'maint', 'photos', 'fees', 'prefs']);
+const SYNCED = new Set(['parkings', 'maint', 'docs', 'photos', 'fees', 'prefs']);
 const DB = {
   db: null,
   open() {
     return new Promise((res, rej) => {
-      const r = indexedDB.open('mybikencar', 3);
+      const r = indexedDB.open('mybikencar', 4);
       r.onupgradeneeded = () => {
-        for (const s of ['parkings', 'maint', 'photos', 'blobs', 'fees', 'prefs']) if (!r.result.objectStoreNames.contains(s)) r.result.createObjectStore(s, { keyPath: 'id' });
+        for (const s of ['parkings', 'maint', 'docs', 'photos', 'blobs', 'fees', 'prefs']) if (!r.result.objectStoreNames.contains(s)) r.result.createObjectStore(s, { keyPath: 'id' });
         if (!r.result.objectStoreNames.contains('outbox')) r.result.createObjectStore('outbox', { keyPath: 'seq', autoIncrement: true });
       };
       r.onsuccess = () => { this.db = r.result; res(); };
@@ -542,7 +567,7 @@ const Sync = {
     const sig = JSON.stringify(data);
     if (sig !== this.lastSig || force) {
       const waiting = new Set((await DB.all('outbox')).map(e => e.store + '|' + e.id));
-      for (const s of ['parkings', 'maint', 'photos', 'fees', 'prefs']) {
+      for (const s of ['parkings', 'maint', 'docs', 'photos', 'fees', 'prefs']) {
         const local = await DB.all(s); const remote = new Map((data[s] || []).map(o => [o.id, o]));
         const puts = [...remote.values()].filter(o => !waiting.has(s + '|' + o.id));
         const dels = local.filter(o => !remote.has(o.id) && !waiting.has(s + '|' + o.id)).map(o => o.id);
@@ -570,9 +595,9 @@ function syncText() {
   if (Sync.state === 'offline') return `<b style="color:var(--warn)">Chưa kết nối được OMV</b> · ${last}`;
   return `<b style="color:var(--ok)">Đã đồng bộ</b> · ${last}`;
 }
-const S = { parkings: [], maint: [], photos: [], fees: [], profile: {} };
+const S = { parkings: [], maint: [], docs: [], photos: [], fees: [], profile: {} };
 async function loadAll() {
-  [S.parkings, S.maint, S.photos, S.fees] = await Promise.all([DB.all('parkings'), DB.all('maint'), DB.all('photos'), DB.all('fees')]);
+  [S.parkings, S.maint, S.docs, S.photos, S.fees] = await Promise.all([DB.all('parkings'), DB.all('maint'), DB.all('docs'), DB.all('photos'), DB.all('fees')]);
   S.profile = (await DB.get('prefs', 'profile')) || { id: 'profile' };
 }
 const latest = type => S.parkings.filter(p => p.type === type).sort((a, b) => b.ts - a.ts)[0];
@@ -626,7 +651,7 @@ async function addPhoto(file, kind, ref) {
 async function deletePhoto(id) {
   await DB.del('blobs', id); await DB.del('photos', id);
   S.photos = S.photos.filter(p => p.id !== id);
-  for (const [store, arr] of [['parkings', S.parkings], ['maint', S.maint]]) {
+  for (const [store, arr] of [['parkings', S.parkings], ['maint', S.maint], ['docs', S.docs]]) {
     for (const r of arr) if (r.photoIds?.includes(id)) { r.photoIds = r.photoIds.filter(x => x !== id); await DB.put(store, r); }
   }
   for (const v of ['thumb', 'full']) { const k = id + ':' + v; if (urlCache.has(k)) { URL.revokeObjectURL(urlCache.get(k)); urlCache.delete(k); } }
@@ -762,10 +787,15 @@ function renderBadges() {
   $('#bHistory').textContent = S.parkings.length ? `${S.parkings.length} lần` : '';
   const last = [...S.maint].sort((a, b) => b.date.localeCompare(a.date))[0];
   $('#bMaint').textContent = last ? `gần nhất ${fmtDate(parseISO(last.date))}` : '';
+  for (const [cat, el] of [['reg', '#bReg'], ['ins', '#bIns']]) {
+    const n = docDue().filter(d => d.cat === cat)[0];
+    $(el).textContent = n ? `${n.left < 0 ? 'đã hết hạn' : 'hạn'} ${fmtDate(parseISO(n.expiry))}` : '';
+    $(el).className = 'badge' + (n && n.left < 0 ? ' late' : n && n.left <= DOC_WARN ? ' soon' : '');
+  }
 }
 function render() {
-  renderFees(); renderStatus(); renderPlan(); renderBadges();
-  for (const [id, fn] of [['pagePhotos', renderPhotos], ['pageHistory', renderHistory], ['pageMaint', renderMaint]]) if ($('#' + id).classList.contains('open')) fn();
+  renderFees(); renderRemind(); renderStatus(); renderPlan(); renderBadges();
+  for (const [id, fn] of [['pagePhotos', renderPhotos], ['pageHistory', renderHistory], ['pageMaint', renderMaint], ['pageReg', renderReg], ['pageIns', renderIns]]) if ($('#' + id).classList.contains('open')) fn();
 }
 
 /* =========================================================
@@ -1035,7 +1065,14 @@ async function feeCenter() {
 
 // Opened from a "new fee" notification: show the payment sheet straight away.
 function openFeeFromUrl(url) {
-  const id = new URL(url, location.href).searchParams.get('fee'); if (!id) return;
+  const u = new URL(url, location.href);
+  const dc = u.searchParams.get('doc');
+  if (dc === 'reg' || dc === 'ins') {
+    history.replaceState(null, '', location.pathname);
+    const t = u.searchParams.get('v'); if (t === 'bike' || t === 'car') pageState[dc] = t;
+    openDocPage(dc); return;
+  }
+  const id = u.searchParams.get('fee'); if (!id) return;
   history.replaceState(null, '', location.pathname);
   const f = S.fees.find(x => x.id === id);
   if (f) paySheet(f); else if (Sync.on) feeCenter();
@@ -1112,7 +1149,7 @@ function parkDetail(p) {
 /* =========================================================
    Pages
    ========================================================= */
-const pageState = { photos: 'all', history: 'all', maint: 'bike' };
+const pageState = { photos: 'all', history: 'all', maint: 'bike', reg: 'car', ins: 'bike' };
 function openPage(id, title, fn) {
   const pg = $('#' + id);
   pg.innerHTML = `<header class="page-h"><button class="back">${IC.back}Trang chủ</button></header>
@@ -1153,7 +1190,7 @@ function renderPhotos() {
   if (all.length) {
     const btn = h(`<button class="btn danger-fill clear mt">${IC.trash}Dọn sạch ảnh (${all.length})</button>`);
     btn.onclick = clearParkingPhotos; c.append(btn);
-    c.insertAdjacentHTML('beforeend', `<div class="help" style="text-align:center;margin-top:8px">Ảnh phiếu bảo dưỡng nằm riêng trong Lịch bảo dưỡng xe và không bị xoá.</div>`);
+    c.insertAdjacentHTML('beforeend', `<div class="help" style="text-align:center;margin-top:8px">Ảnh phiếu bảo dưỡng, giấy đăng kiểm và bảo hiểm nằm riêng trong mục của chúng và không bị xoá.</div>`);
   }
 }
 
@@ -1162,7 +1199,7 @@ async function clearParkingPhotos() {
   if (!list.length) return;
   const ok = await ask({
     title: 'Xoá toàn bộ ảnh đã chụp?',
-    msg: `${list.length} ảnh vị trí đỗ xe sẽ bị xoá vĩnh viễn và không khôi phục được (trừ khi bạn có bản sao lưu).\n\nẢnh phiếu bảo dưỡng không bị ảnh hưởng.`,
+    msg: `${list.length} ảnh vị trí đỗ xe sẽ bị xoá vĩnh viễn và không khôi phục được (trừ khi bạn có bản sao lưu).\n\nẢnh phiếu bảo dưỡng, đăng kiểm, bảo hiểm không bị ảnh hưởng.`,
     yes: 'Có, xoá hết', no: 'Không',
   });
   if (!ok) return;
@@ -1287,6 +1324,143 @@ function maintSheet(type, rec) {
   };
 }
 
+/* ---------- Đăng kiểm & Bảo hiểm xe (kho `docs`, v1.9.0) ----------
+   Bản ghi: { id, type: bike|car, cat: reg|ins, kind (bảo hiểm: tnds|vc|other), date, expiry, place, code, cost, note, photoIds, ts }
+   Ảnh giấy tờ: kind 'doc', ref = id bản ghi. */
+const DOC_WARN = 30;  // báo trước bao nhiêu ngày
+const INS_KINDS = [['tnds', 'TNDS bắt buộc'], ['vc', 'Vật chất (thân vỏ)'], ['other', 'Khác']];
+const insName = k => (INS_KINDS.find(x => x[0] === k) || INS_KINDS[0])[1];
+const docName = r => r.cat === 'reg' ? `Đăng kiểm ${vehName(r.type)}` : `Bảo hiểm ${r.kind === 'vc' ? 'vật chất' : r.kind === 'other' ? '' : 'TNDS '}${vehName(r.type)}`.replace('  ', ' ');
+const docTitle = c => c === 'reg' ? 'Đăng kiểm' : 'Bảo hiểm xe';
+const addMonths = (iso, n) => {
+  const d = parseISO(iso); const day = d.getDate();
+  d.setDate(1); d.setMonth(d.getMonth() + n);
+  d.setDate(Math.min(day, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()));
+  return isoDate(d);
+};
+const docSort = (a, b) => (b.date || '').localeCompare(a.date || '') || b.ts - a.ts;
+// Bản mới nhất của từng loại (xe + đăng kiểm / từng loại bảo hiểm) có ghi hạn, hạn gần nhất lên đầu.
+function docDue() {
+  const latest = new Map();
+  for (const r of [...S.docs].sort(docSort)) {
+    const k = `${r.type}|${r.cat}|${r.cat === 'ins' ? r.kind || 'tnds' : ''}`;
+    if (!latest.has(k)) latest.set(k, r);
+  }
+  return [...latest.values()].filter(r => r.expiry)
+    .map(r => ({ ...r, left: daysBetween(Date.now(), parseISO(r.expiry)) })).sort((a, b) => a.left - b.left);
+}
+const leftTxt = n => n < 0 ? `quá hạn ${-n} ngày` : n === 0 ? 'hết hạn hôm nay' : `còn ${n} ngày`;
+const leftCls = n => n < 0 ? 'late' : n <= DOC_WARN ? 'soon' : 'fine';
+
+// Trang chủ: nhắc khi còn ≤ 30 ngày hoặc đã quá hạn.
+function renderRemind() {
+  const el = $('#remind'); if (!el) return;
+  const list = docDue().filter(r => r.left <= DOC_WARN);
+  el.innerHTML = list.map(r => `<button class="rem" data-cat="${r.cat}" data-t="${r.type}" style="--acc:var(--${r.left < 0 ? 'warn' : 'bike'})">
+    ${icon(r.cat === 'reg' ? 'stamp' : 'shield')}<span><b>${esc(docName(r))}</b>${r.left < 0 ? 'Đã hết hạn' : 'Hết hạn'} ${fmtDate(parseISO(r.expiry))}</span>
+    <span class="pill ${leftCls(r.left)}" style="flex:none">${leftTxt(r.left)}</span></button>`).join('');
+  $$('.rem', el).forEach(b => b.onclick = () => { pageState[b.dataset.cat] = b.dataset.t; openDocPage(b.dataset.cat); });
+}
+
+function openDocPage(cat) { openPage(cat === 'reg' ? 'pageReg' : 'pageIns', docTitle(cat), cat === 'reg' ? renderReg : renderIns); }
+const renderReg = () => renderDocs('reg');
+const renderIns = () => renderDocs('ins');
+
+function renderDocs(cat) {
+  const c = $(`#${cat === 'reg' ? 'pageReg' : 'pageIns'} .content`); if (!c) return; c.innerHTML = '';
+  const t = pageState[cat];
+  c.style.setProperty('--acc', `var(--${t})`);
+  c.append(segCtl([['bike', 'Xe máy'], ['car', 'Ô tô']], t, k => { pageState[cat] = k; renderDocs(cat); }));
+  const list = S.docs.filter(r => r.cat === cat && r.type === t).sort(docSort);
+  const due = docDue().filter(r => r.cat === cat && r.type === t);
+  let html = '<div class="dcards">';
+  const card = (label, r) => {
+    if (!r) return `<div class="mcard"><div class="k">${esc(label)}</div><div class="sub" style="color:var(--muted)">Chưa có dữ liệu ${vehName(t)}.</div></div>`;
+    const d = due.find(x => x.id === r.id);
+    return `<div class="mcard"><div class="k">${esc(label)}</div>
+      ${d ? `<div class="big${d.left < 0 ? ' late' : ''}">${fmtDate(parseISO(d.expiry))}</div>
+      <div class="sub"><span class="pill ${leftCls(d.left)}">${leftTxt(d.left)}</span></div>` : `<div class="sub" style="color:var(--muted)">Chưa ghi ngày hết hạn</div>`}
+      <div class="next">${cat === 'reg' ? 'Đăng kiểm' : 'Mua'} lần gần nhất: <b>${r.date ? fmtDate(parseISO(r.date)) : '—'}</b>${r.place ? ` · ${esc(r.place)}` : ''}</div></div>`;
+  };
+  if (cat === 'reg') html += card('HẠN ĐĂNG KIỂM', list[0]);
+  else {
+    const kinds = INS_KINDS.filter(([k]) => list.some(r => (r.kind || 'tnds') === k));
+    if (!kinds.length) html += card('HẠN BẢO HIỂM', null);
+    for (const [k, l] of kinds) html += card(`HẠN BẢO HIỂM ${l.toUpperCase()}`, list.find(r => (r.kind || 'tnds') === k));
+  }
+  html += `</div><button class="btn primary mt add">${IC.plus}${cat === 'reg' ? 'Thêm lần đăng kiểm' : 'Thêm lần mua bảo hiểm'}</button>`;
+  if (list.length) {
+    const cur = new Set(due.map(r => r.id));
+    html += `<div class="h3">${cat === 'reg' ? 'Lịch sử đăng kiểm' : 'Lịch sử mua bảo hiểm'}</div><div class="list">` + list.map(r => `<button class="mrow${cur.has(r.id) || !r.expiry ? '' : ' old'}" data-id="${r.id}">
+      <div class="l1"><span>${cat === 'ins' ? `<span class="tagk">${esc(insName(r.kind).split(' (')[0])}</span>` : ''}${r.date ? fmtDate(parseISO(r.date)) : '—'}</span><span>${r.cost ? nf(r.cost) + ' đ' : ''}</span></div>
+      <div class="l2">${[r.expiry ? `hạn đến ${fmtDate(parseISO(r.expiry))}` : '', esc(r.place), r.code ? 'số ' + esc(r.code) : ''].filter(Boolean).join(' · ') || '&nbsp;'}</div>
+      ${r.note ? `<div class="l3">${esc(r.note)}</div>` : ''}
+      ${r.photoIds?.length ? `<div class="thumbs">${r.photoIds.slice(0, 5).map(id => imgTag(id)).join('')}</div>` : ''}</button>`).join('') + '</div>';
+  }
+  c.insertAdjacentHTML('beforeend', html);
+  $('.add', c).onclick = () => docSheet(cat, t);
+  $$('.mrow', c).forEach(b => b.onclick = () => docSheet(cat, t, S.docs.find(r => r.id === b.dataset.id)));
+  hydrate(c);
+}
+
+function docSheet(cat, type, rec) {
+  const reg = cat === 'reg';
+  const today = isoDate(new Date());
+  const st = rec ? { ...rec, photoIds: [...(rec.photoIds || [])] }
+    : { id: uid(), type, cat, kind: reg ? undefined : 'tnds', date: today, expiry: reg ? '' : addMonths(today, 12), place: '', code: '', cost: '', note: '', photoIds: [], ts: Date.now() };
+  if (!reg && !st.kind) st.kind = 'tnds';
+  const added = []; let saved = false;
+  let expiryTouched = !!rec;
+  const quick = reg ? [[6, '6 tháng'], [12, '1 năm'], [18, '18 tháng'], [24, '2 năm'], [36, '3 năm']] : [[12, '1 năm'], [24, '2 năm'], [36, '3 năm']];
+  const body = h(`<div>
+    ${reg ? '' : `<div class="lbl">Loại bảo hiểm</div><div class="chips kind">${INS_KINDS.map(([k, l]) => `<button data-k="${k}">${esc(l)}</button>`).join('')}</div>`}
+    <div class="two"><div><div class="lbl">${reg ? 'Ngày đăng kiểm' : 'Ngày mua / hiệu lực từ'}</div><input class="field" type="date" name="date"></div>
+      <div><div class="lbl">Hết hạn</div><input class="field" type="date" name="expiry"></div></div>
+    <div class="lbl">Hạn sau ngày ${reg ? 'đăng kiểm' : 'mua'}</div><div class="chips quick">${quick.map(([n, l]) => `<button data-n="${n}">${l}</button>`).join('')}</div>
+    <div class="lbl">${reg ? 'Trạm đăng kiểm' : 'Công ty bảo hiểm'}</div><input class="field" name="place" placeholder="${reg ? 'VD: Trạm 29-03V Pháp Vân' : 'VD: Bảo Việt, PVI, PJICO'}">
+    <div class="lbl">${reg ? 'Số tem / số giấy chứng nhận' : 'Số giấy chứng nhận / hợp đồng'}</div><input class="field" name="code" placeholder="${reg ? 'VD: KC 1234567' : 'VD: BV-2026-0012345'}">
+    <div class="lbl">Chi phí (đ)</div><input class="field" inputmode="numeric" name="cost" placeholder="${reg ? 'VD: 340000' : 'VD: 480000'}">
+    <div class="lbl">Ghi chú</div><textarea class="field" name="note" placeholder="${reg ? 'VD: lỗi phải sửa, giấy tờ cần mang' : 'VD: mức bồi thường, số tổng đài'}"></textarea>
+    <div class="lbl">${reg ? 'Ảnh giấy đăng kiểm / tem' : 'Ảnh giấy chứng nhận bảo hiểm'}</div><div class="photo-row"></div>
+    <button class="btn primary save mt">Lưu</button>
+    ${rec ? `<button class="btn danger del">${IC.trash}${reg ? 'Xoá lần đăng kiểm này' : 'Xoá lần mua bảo hiểm này'}</button>` : ''}</div>`);
+  for (const k of ['date', 'expiry', 'place', 'code', 'cost', 'note']) $(`[name=${k}]`, body).value = st[k] ?? '';
+  $('[name=cost]', body).addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g, ''); });
+  $('[name=expiry]', body).addEventListener('input', () => { expiryTouched = true; });
+  // Bảo hiểm thường 1 năm: đổi ngày mua thì hạn chạy theo (nếu chưa tự sửa hạn).
+  $('[name=date]', body).addEventListener('change', e => { if (!reg && !expiryTouched && e.target.value) $('[name=expiry]', body).value = addMonths(e.target.value, 12); });
+  $$('.quick button', body).forEach(b => b.onclick = () => {
+    const d = $('[name=date]', body).value; if (!d) { alert('Chọn ngày trước'); return; }
+    $('[name=expiry]', body).value = addMonths(d, +b.dataset.n); expiryTouched = true;
+  });
+  const paintKind = () => $$('.kind button', body).forEach(b => b.classList.toggle('on', b.dataset.k === st.kind));
+  $$('.kind button', body).forEach(b => b.onclick = () => { st.kind = b.dataset.k; paintKind(); });
+  paintKind();
+  photoRow($('.photo-row', body), () => st.photoIds,
+    async files => { for (const m of await savePhotos(files, 'doc', st.id)) { st.photoIds.push(m.id); added.push(m.id); } },
+    async id => { await deletePhoto(id); st.photoIds = st.photoIds.filter(x => x !== id); },
+    ['Chụp giấy', 'Chọn ảnh']);
+  const sh = openSheet({ title: rec ? (reg ? 'Sửa đăng kiểm' : 'Sửa bảo hiểm') : `${reg ? 'Đăng kiểm' : 'Bảo hiểm'} ${vehName(type)}`, titleIcon: type, acc: type, body,
+    onCancel: async () => { if (!saved) for (const id of added) await deletePhoto(id); render(); } });
+  $('.save', body).onclick = async () => {
+    for (const k of ['date', 'expiry', 'place', 'code', 'note']) st[k] = $(`[name=${k}]`, body).value.trim();
+    const v = $('[name=cost]', body).value; st.cost = v ? Number(v) : '';
+    if (!st.date) { alert(reg ? 'Chọn ngày đăng kiểm' : 'Chọn ngày mua bảo hiểm'); return; }
+    if (!st.expiry) { alert('Chọn ngày hết hạn để app nhắc bạn trước khi hết hạn'); return; }
+    if (st.expiry <= st.date) { alert('Ngày hết hạn phải sau ngày ' + (reg ? 'đăng kiểm' : 'mua')); return; }
+    if (reg) delete st.kind;
+    await DB.put('docs', st); saved = true;
+    const i = S.docs.findIndex(r => r.id === st.id); if (i >= 0) S.docs[i] = st; else S.docs.push(st);
+    sh.close(); render(); toast(reg ? 'Đã lưu lần đăng kiểm' : 'Đã lưu bảo hiểm');
+  };
+  if (rec) $('.del', body).onclick = async () => {
+    if (!confirm(`Xoá ${reg ? 'lần đăng kiểm' : 'lần mua bảo hiểm'} này và ảnh kèm theo?`)) return;
+    for (const id of [...st.photoIds]) await deletePhoto(id);
+    await DB.del('docs', st.id); S.docs = S.docs.filter(r => r.id !== st.id); saved = true;
+    sh.close(); render(); toast('Đã xoá');
+  };
+}
+
 /* =========================================================
    Photo viewer
    ========================================================= */
@@ -1301,7 +1475,8 @@ function viewer(ids, start) {
     const id = ids[i]; const meta = S.photos.find(p => p.id === id);
     $('.v-count', el).textContent = ids.length > 1 ? `${i + 1} / ${ids.length}` : '';
     img.src = await photoURL(id, 'full');
-    let label = meta?.kind === 'receipt' ? 'Phiếu bảo dưỡng' : 'Ảnh vị trí đỗ';
+    const dr = meta?.kind === 'doc' && S.docs.find(r => r.id === meta.ref);
+    let label = meta?.kind === 'receipt' ? 'Phiếu bảo dưỡng' : meta?.kind === 'doc' ? (dr ? docName(dr) : 'Giấy tờ xe') : 'Ảnh vị trí đỗ';
     const pr = meta?.kind === 'parking' && S.parkings.find(r => r.id === meta.ref);
     if (pr) label += ` · ${pr.type === 'bike' ? 'Xe máy' : 'Ô tô'} ${locText(pr)}`;
     $('.v-meta', el).textContent = `${label} · ${meta ? fmtDate(meta.ts) + ' ' + fmtTime(meta.ts) : ''}`;
@@ -1350,9 +1525,9 @@ async function settings() {
     <div class="set-item upd" style="cursor:default;flex-wrap:wrap">${IC.download}<span style="flex:1"><b>Phiên bản ${esc(APP_VERSION)}</b><small class="upd-txt">Đang kiểm tra bản mới…</small></span>
       <button class="btn primary ink upd-btn" style="height:40px;width:auto;padding:0 14px;font-size:14px">Cập nhật ngay</button></div>
     <div class="lbl">Sao lưu</div>` : ''}
-    <button class="set-item mk">${IC.download}<span><b>Tạo bản sao lưu</b><small>${srv ? 'Lấy từ OMV: vị trí đỗ, lịch bảo dưỡng và toàn bộ ảnh' : 'Gồm vị trí đỗ, lịch bảo dưỡng và toàn bộ ảnh'}</small></span></button>
+    <button class="set-item mk">${IC.download}<span><b>Tạo bản sao lưu</b><small>${srv ? 'Lấy từ OMV: vị trí đỗ, bảo dưỡng, đăng kiểm, bảo hiểm và toàn bộ ảnh' : 'Gồm vị trí đỗ, bảo dưỡng, đăng kiểm, bảo hiểm và toàn bộ ảnh'}</small></span></button>
     <button class="set-item imp">${IC.upload}<span><b>Khôi phục từ bản sao lưu</b><small>${srv ? 'Chọn tệp .json, dữ liệu được gộp lên OMV' : 'Chọn tệp .json đã lưu trước đó'}</small></span></button>
-    <div class="set-item" style="cursor:default">${IC.disk}<span><b>Dữ liệu</b><small>${S.parkings.length} lần đỗ · ${S.maint.length} lần bảo dưỡng<br>${parkingPhotos().length} ảnh đã chụp · ${S.photos.length - parkingPhotos().length} ảnh phiếu bảo dưỡng${usage ? '<br>' + usage : ''}</small></span></div>
+    <div class="set-item" style="cursor:default">${IC.disk}<span><b>Dữ liệu</b><small>${S.parkings.length} lần đỗ · ${S.maint.length} lần bảo dưỡng<br>${S.docs.filter(d => d.cat === 'reg').length} lần đăng kiểm · ${S.docs.filter(d => d.cat === 'ins').length} lần mua bảo hiểm<br>${parkingPhotos().length} ảnh đã chụp · ${S.photos.length - parkingPhotos().length} ảnh giấy tờ, phiếu bảo dưỡng${usage ? '<br>' + usage : ''}</small></span></div>
     <div class="help" style="margin-top:12px">${srv
       ? 'Dữ liệu và ảnh lưu trên máy chủ OMV nhà (DAS › VM_bikencar), không vào Thư viện ảnh. iPhone giữ một bản để dùng khi mất sóng dưới hầm, có mạng lại thì tự gửi lên OMV.'
       : 'Mọi dữ liệu và ảnh chỉ nằm trong app này trên iPhone của bạn, không lên mạng, không vào Thư viện ảnh. Nếu xoá app khỏi màn hình chính thì dữ liệu cũng mất, nên thỉnh thoảng hãy tạo bản sao lưu và lưu vào app Tệp (Files).'}</div>
@@ -1416,7 +1591,7 @@ async function settings() {
         mk.file = new File([await r.blob()], name, { type: 'application/json' });
       } else {
         const blobs = await DB.all('blobs');
-        const data = { app: 'mybikencar', v: 1, at: Date.now(), parkings: S.parkings, maint: S.maint, photos: S.photos,
+        const data = { app: 'mybikencar', v: 1, at: Date.now(), parkings: S.parkings, maint: S.maint, docs: S.docs, photos: S.photos,
           blobs: blobs.map(b => ({ id: b.id, full: b64(b.full), thumb: b64(b.thumb) })) };
         mk.file = new File([JSON.stringify(data)], name, { type: 'application/json' });
       }
@@ -1440,7 +1615,7 @@ async function settings() {
           Sync.lastSig = ''; await Sync.run();
         } else {
           for (const b of d.blobs || []) await DB.put('blobs', { id: b.id, full: unb64(b.full), thumb: unb64(b.thumb) });
-          for (const s of ['photos', 'parkings', 'maint']) for (const o of d[s] || []) await DB.put(s, o);
+          for (const s of ['photos', 'parkings', 'maint', 'docs']) for (const o of d[s] || []) await DB.put(s, o);
         }
         await loadAll(); render(); sh.close(); toast('Đã khôi phục dữ liệu');
       } catch (e) { alert('Không khôi phục được: ' + (e.message || 'chưa kết nối được OMV')); }
@@ -1474,6 +1649,8 @@ $('#btnSettings').onclick = settings;
 $('#navPhotos').onclick = () => openPage('pagePhotos', 'Ảnh đã chụp', renderPhotos);
 $('#navHistory').onclick = () => openPage('pageHistory', 'Lịch sử đỗ xe', renderHistory);
 $('#navMaint').onclick = () => openPage('pageMaint', 'Lịch bảo dưỡng xe', renderMaint);
+$('#navReg').onclick = () => openDocPage('reg');
+$('#navIns').onclick = () => openDocPage('ins');
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { render(); Sync.kick(100); } });
 addEventListener('online', () => Sync.kick(100));
 setInterval(() => { if (!document.hidden) Sync.kick(0); }, 60000);

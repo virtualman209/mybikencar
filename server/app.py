@@ -34,7 +34,7 @@ REPO_RAW = os.environ.get("REPO_RAW", "https://raw.githubusercontent.com/virtual
 KEEP_BACKUPS = 30
 MAX_PHOTO = 25 * 1024 * 1024
 VN = timezone(timedelta(hours=7))
-STORES = ("parkings", "maint", "fees", "prefs")
+STORES = ("parkings", "maint", "docs", "fees", "prefs")
 ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 STATIC_FILES = {"index.html", "sw.js", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"}
 
@@ -202,7 +202,7 @@ def delete_record(store: str, rid: str):
 async def upload_photo(meta: str = Form(...), full: UploadFile | None = File(None), thumb: UploadFile | None = File(None)):
     m = json.loads(meta)
     pid = check_id(m.get("id", ""))
-    if m.get("kind") not in ("parking", "receipt"):
+    if m.get("kind") not in ("parking", "receipt", "doc"):
         raise HTTPException(400, "loại ảnh không hợp lệ")
     for f, v in ((full, "full"), (thumb, "thumb")):
         if f is not None:
@@ -663,6 +663,82 @@ def notify_fee(fee: dict):
                    "url": f"./?fee={fee['id']}", "tag": fee["id"]})
     except Exception as e:  # noqa: BLE001
         print("notify error:", e)
+
+
+# ---------------------------------------------------------------- nhắc hạn đăng kiểm / bảo hiểm (v1.9.0)
+DOC_REMIND = DATA / "docremind.json"
+DOC_DAYS = (30, 7, 1, 0)  # gửi thông báo khi còn 30, 7, 1 ngày và đúng ngày hết hạn
+INS_NAMES = {"tnds": "TNDS ", "vc": "vật chất ", "other": ""}
+
+
+def doc_name(r: dict) -> str:
+    veh = "ô tô" if r.get("type") == "car" else "xe máy"
+    if r.get("cat") == "reg":
+        return f"Đăng kiểm {veh}"
+    return f"Bảo hiểm {INS_NAMES.get(r.get('kind') or 'tnds', '')}{veh}"
+
+
+def docs_due(today=None) -> list:
+    """Bản mới nhất của từng loại giấy tờ (có hạn) kèm số ngày còn lại."""
+    today = today or datetime.now(VN).date()
+    rows = [json.loads(r["data"]) for r in q("SELECT data FROM records WHERE store='docs'")]
+    rows.sort(key=lambda r: (r.get("date") or "", r.get("ts") or 0), reverse=True)
+    latest = {}
+    for r in rows:
+        k = (r.get("type"), r.get("cat"), (r.get("kind") or "tnds") if r.get("cat") == "ins" else "")
+        latest.setdefault(k, r)
+    out = []
+    for r in latest.values():
+        try:
+            exp = datetime.strptime(r.get("expiry") or "", "%Y-%m-%d").date()
+        except ValueError:
+            continue
+        out.append((r, (exp - today).days))
+    return out
+
+
+def check_doc_reminders(today=None):
+    sent = read_json(DOC_REMIND, {})
+    for r, left in docs_due(today):
+        # Mốc hiện tại = mốc nhỏ nhất mà số ngày còn lại chưa vượt; máy chủ tắt hôm đúng mốc thì vẫn báo bù.
+        marks = [m for m in DOC_DAYS if left <= m]
+        if not marks or left < -30:
+            continue
+        mark = "late" if left < 0 else min(marks)
+        key = f"{r['id']}|{r['expiry']}|{mark}"
+        if sent.get(key):
+            continue
+        exp = r["expiry"]
+        d = f"{exp[8:10]}/{exp[5:7]}/{exp[:4]}"
+        if left < 0:
+            body = f"Đã hết hạn từ {d} (quá {-left} ngày) · Nhớ gia hạn"
+        elif left == 0:
+            body = f"Hết hạn hôm nay ({d}) · Nhớ gia hạn"
+        else:
+            body = f"Còn {left} ngày là hết hạn ({d})" + (" · Nhớ gia hạn" if left <= 7 else "")
+        try:
+            send_push({"title": doc_name(r), "body": body, "url": f"./?doc={r.get('cat')}&v={r.get('type')}", "tag": f"doc-{r['id']}"})
+        except Exception as e:  # noqa: BLE001
+            print("doc remind error:", e)
+            continue
+        sent[key] = int(time.time())
+    if len(sent) > 200:  # giữ gọn tệp
+        sent = dict(sorted(sent.items(), key=lambda kv: kv[1])[-200:])
+    write_json(DOC_REMIND, sent)
+
+
+def doc_remind_loop():
+    """Mỗi giờ kiểm tra; chỉ gửi trong khung 8:00–21:00 giờ VN, mỗi mốc một lần."""
+    while True:
+        try:
+            if 8 <= datetime.now(VN).hour < 21:
+                check_doc_reminders()
+        except Exception as e:  # noqa: BLE001
+            print("doc remind error:", e)
+        time.sleep(3600)
+
+
+threading.Thread(target=doc_remind_loop, daemon=True).start()
 
 
 @app.get("/api/push/key")
