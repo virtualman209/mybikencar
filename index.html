@@ -51,6 +51,8 @@ svg{display:block}
 .top{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .brand{font-size:34px;font-weight:900;letter-spacing:-1.2px;margin:0;line-height:1.05}
 .brand span{color:var(--bike)} .brand i{font-style:normal;color:var(--car)}
+.brand{position:relative}
+.brand .ver{position:absolute;left:100%;top:3px;margin-left:5px;white-space:nowrap;font-size:11px;font-weight:600;letter-spacing:0;color:var(--muted);line-height:1}
 .icon-btn{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:var(--muted)}
 .icon-btn:active{background:var(--soft)}
 .icon-btn{position:relative}
@@ -326,7 +328,7 @@ textarea.field{min-height:84px;resize:vertical}
 
 <main class="home" id="home">
   <div class="top">
-    <h1 class="brand">My<span>Bike</span>'n<i>Car</i></h1>
+    <h1 class="brand">My<span>Bike</span>'n<i>Car</i><small class="ver" id="appVer"></small></h1>
     <button class="icon-btn" id="btnSettings" aria-label="Cài đặt"><span class="g"></span><span id="syncDot" class="sync-dot off"></span></button>
   </div>
   <div class="install hidden" id="install"></div>
@@ -442,7 +444,7 @@ $('#btnSettings .g').innerHTML = IC.gear;
    Config: Seasons Avenue
    ========================================================= */
 /* App version – keep in sync with VERSION in sw.js */
-const APP_VERSION = 'v1.9.1';
+const APP_VERSION = 'v1.9.2';
 
 const VEH = {
   bike: { name: 'Xe máy', floors: ['M', '2', '3', '4'], zones: f => f === 'M' ? ['S1', 'S2', 'S3', 'S4', 'EV'] : ['S1', 'S2', 'S3', 'S4'] },
@@ -1759,7 +1761,9 @@ setInterval(() => { if (!document.hidden) Sync.kick(0); }, 60000);
     });
     navigator.serviceWorker.register('sw.js').then(r => r.update()).catch(() => {});
   }
-  try { if (sessionStorage.getItem('justUpdated')) { sessionStorage.removeItem('justUpdated'); toast(`Đã cập nhật lên phiên bản ${APP_VERSION}`); } } catch {}
+  // v1.9.2: không hiện khung "Đã cập nhật…" ở dưới nữa; số phiên bản nằm nhỏ cạnh logo.
+  $('#appVer').textContent = APP_VERSION;
+  try { sessionStorage.removeItem('justUpdated'); } catch {}
 })();
 </script>
 </body>
