@@ -29,6 +29,7 @@ iPhone giữ đủ dữ liệu trong IndexedDB. Mọi thay đổi vào `outbox`,
 Máy `192.168.50.231`, Tailscale `100.78.213.85`. DAS = `/srv/dev-disk-by-uuid-63bcf028-ccf8-4a65-a3f2-0510da8ead2c`. Thư mục app `DAS/VM_bikencar/{web,data,backup}`.
 
 ## Nhật ký phiên bản
+- **v1.9.3** (20/11/2026) – Bỏ dải sáng ở đáy màn hình iPhone: khung thông báo (`.toast`) khi ẩn trước chỉ dịch xuống 140% nên còn ló ở vùng thanh vuốt (chế độ tối thấy rõ). Giờ ẩn hẳn (`visibility:hidden`, `opacity:0`, đẩy xuống quá vùng an toàn).
 - **v1.9.2** (20/11/2026) – Bỏ khung báo "Đã cập nhật lên phiên bản…" ở dưới cùng trang chủ (chủ nhà muốn để trống). Số phiên bản hiện chữ nhỏ ở góc trên bên phải logo (`#appVer`).
 - **v1.9.1** (20/11/2026) – Gộp Bảo dưỡng / Đăng kiểm / Bảo hiểm thành một mục **Thông tin xe** (menu trang chủ lại còn 3 nút). Thêm thẻ **Hồ sơ**: hãng, dòng xe, đời, màu, biển số, số khung, số máy, chủ xe, ngày mua, ghi chú, ảnh giấy đăng ký (cà vẹt); bấm dòng để chép. Sao lưu trên máy (GitHub Pages) gồm cả `prefs`.
 - **v1.9.0** (20/11/2026) – Thêm **Đăng kiểm** và **Bảo hiểm xe** (xe máy / ô tô): ghi ngày, hạn (nút nhanh 6 tháng–3 năm; bảo hiểm tự đặt 1 năm), trạm / công ty, số tem / GCN, chi phí, ghi chú, chụp ảnh giấy tờ; lịch sử; thẻ nhắc ở trang chủ khi sắp hết hạn; thông báo đẩy từ OMV trước 30, 7, 1 ngày và đúng ngày hết hạn. Sao lưu / khôi phục gồm cả kho `docs`.

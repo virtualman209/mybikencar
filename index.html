@@ -271,8 +271,11 @@ textarea.field{min-height:84px;resize:vertical}
 /* ---------- TOAST ---------- */
 .toast{position:fixed;left:12px;right:12px;bottom:calc(var(--safe-b) + 14px);z-index:120;max-width:496px;margin:0 auto;
   background:var(--ink);color:var(--bg);border-radius:16px;padding:12px 14px;font-size:15px;font-weight:550;
-  box-shadow:0 8px 28px rgba(0,0,0,.25);transform:translateY(140%);transition:transform .28s cubic-bezier(.2,.8,.2,1)}
-.toast.show{transform:none}
+  box-shadow:0 8px 28px rgba(0,0,0,.25);
+  /* v1.9.3: ẩn hẳn khi không hiện (trước đây chỉ đẩy xuống 140% nên còn ló dải sáng ở đáy iPhone) */
+  transform:translateY(calc(100% + var(--safe-b) + 40px));visibility:hidden;opacity:0;
+  transition:transform .28s cubic-bezier(.2,.8,.2,1),opacity .2s,visibility 0s .28s}
+.toast.show{transform:none;visibility:visible;opacity:1;transition:transform .28s cubic-bezier(.2,.8,.2,1),opacity .2s,visibility 0s}
 .toast .acts{display:flex;gap:8px;margin-top:10px}
 .toast .acts button{flex:1;height:40px;border-radius:10px;font-weight:700;color:#fff;font-size:14px}
 /* fees */
@@ -444,7 +447,7 @@ $('#btnSettings .g').innerHTML = IC.gear;
    Config: Seasons Avenue
    ========================================================= */
 /* App version – keep in sync with VERSION in sw.js */
-const APP_VERSION = 'v1.9.2';
+const APP_VERSION = 'v1.9.3';
 
 const VEH = {
   bike: { name: 'Xe máy', floors: ['M', '2', '3', '4'], zones: f => f === 'M' ? ['S1', 'S2', 'S3', 'S4', 'EV'] : ['S1', 'S2', 'S3', 'S4'] },
