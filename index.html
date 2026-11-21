@@ -277,6 +277,8 @@ textarea.field{min-height:84px;resize:vertical}
   transition:transform .28s cubic-bezier(.2,.8,.2,1),opacity .2s,visibility 0s .28s}
 .toast.show{transform:none;visibility:visible;opacity:1;transition:transform .28s cubic-bezier(.2,.8,.2,1),opacity .2s,visibility 0s}
 .toast .acts{display:flex;gap:8px;margin-top:10px}
+.pay-src{text-align:center;font-size:12.5px;color:var(--muted);margin:6px 8px 0;line-height:1.35}
+.pay-src b{font-weight:600;color:var(--ink)}
 .toast .acts button{flex:1;height:40px;border-radius:10px;font-weight:700;color:#fff;font-size:14px}
 /* fees */
 #fees:empty{display:none}
@@ -447,7 +449,7 @@ $('#btnSettings .g').innerHTML = IC.gear;
    Config: Seasons Avenue
    ========================================================= */
 /* App version – keep in sync with VERSION in sw.js */
-const APP_VERSION = 'v1.9.3';
+const APP_VERSION = 'v1.9.4';
 
 const VEH = {
   bike: { name: 'Xe máy', floors: ['M', '2', '3', '4'], zones: f => f === 'M' ? ['S1', 'S2', 'S3', 'S4', 'EV'] : ['S1', 'S2', 'S3', 'S4'] },
@@ -888,6 +890,7 @@ function paySheet(f) {
   const body = h(`<div class="pay">
     <div class="pay-amt">${money(f.amount)}</div>
     <div class="pay-sub">${f.month ? 'Tháng ' + esc(f.month) : ''}${f.due ? ` · hạn ${fmtDate(parseISO(f.due))}` : ''}${d.txt && !f.paidAt ? ` · <span class="${d.cls}">${d.txt}</span>` : ''}</div>
+    ${f.subject ? `<div class="pay-src">Từ email: <b>${esc(f.subject)}</b>${f.received ? ` · nhận ${fmtDate(f.received)}` : ''}</div>` : ''}
     ${f.paidAt ? `<div class="paid-box">✓ Đã thanh toán lúc ${fmtTime(f.paidAt)} ngày ${fmtDate(f.paidAt)}<small class="tt-line" style="display:block;margin-top:4px"></small></div>` : ''}
     <div class="lbl">Chuyển tới</div>
     ${f.replacedBy ? `<div class="warn-line">Đã có thông báo phí mới hơn cho tháng này, không cần trả khoản này.</div>` : ''}

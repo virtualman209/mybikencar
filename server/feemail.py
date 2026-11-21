@@ -121,6 +121,22 @@ def pdf_parts(msg):
 
 BILL_SUBJECT = re.compile(r"ph[ií]|debit|fee", re.I)                   # tiêu đề có chữ "phí"
 PARKING_SUBJECT = re.compile(r"(đỗ|gửi|giữ)\s*xe|vé\s*xe", re.I)          # phí gửi xe: đọc nội dung email, không đọc PDF
+# v1.9.4: chỉ coi là phí gửi xe khi email thật sự nói về gửi xe. Trước đây email nào có "Số tiền" + "Số tài khoản"
+# (phí quản lý Seasons Avenue, Sun Ponte "Amount / Account No"…) cũng thành "phí gửi ô tô".
+PARKING_TEXT = re.compile(r"ph[ií]\s+(?:gửi|đỗ|giữ|trông)\s+xe|vé\s+xe|vé\s+tháng|parking", re.I)
+NOT_PARKING = re.compile(r"ph[ií]\s+quản\s+lý|ph[ií]\s+dịch\s+vụ|management\s+fee|service\s+(?:charge|fee)|closing\s+payable"
+                         r"|sun\s*ponte|sungroup|tiền\s+(?:điện|nước)|ph[ií]\s+(?:điện|nước)", re.I)
+
+
+def is_parking_mail(subject: str, sender: str, text: str) -> bool:
+    """Email báo phí gửi xe? Tiêu đề có "gửi xe / vé xe" -> có. Tiêu đề / người gửi là phí dịch vụ, Sun Ponte -> không.
+    Còn lại: nội dung phải nhắc tới gửi xe và không nhắc phí quản lý / dịch vụ / điện nước."""
+    if PARKING_SUBJECT.search(subject or ""):
+        return True
+    if NOT_PARKING.search(f"{subject or ''} {sender or ''}"):
+        return False
+    flat = re.sub(r"\s+", " ", unicodedata.normalize("NFC", text or ""))
+    return bool(PARKING_TEXT.search(flat)) and not NOT_PARKING.search(flat)
 
 
 def fees_from_message(mid: str, subject: str, sender: str, received: int, text: str, pdfs, seen: set, fails: dict | None = None):
@@ -130,7 +146,7 @@ def fees_from_message(mid: str, subject: str, sender: str, received: int, text: 
     import feepdf
     out = []
     fid = "fee" + hashlib.sha1(mid.encode()).hexdigest()[:16]
-    park = parse_fee(text)
+    park = parse_fee(text) if is_parking_mail(subject, sender, text) else None
     if park and fid not in seen:
         park.update(kind="parking")
         out.append((park | {"id": fid}, None))

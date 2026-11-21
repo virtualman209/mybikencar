@@ -396,6 +396,10 @@ def check_mail_now() -> dict:
             have = {r["id"] for r in q("SELECT id FROM records WHERE store='fees'")}
             seen &= have
             cfg.update(seenV=3, scriptSince=0, pdfFails={})
+        quiet = set()
+        if cfg.get("seenV2") != 4:   # v1.9.4: dọn "phí gửi xe" báo nhầm từ email phí quản lý / Sun Ponte, rồi đọc lại
+            quiet = cleanup_wrong_parking(seen)
+            cfg.update(seenV2=4, scriptSince=0, recheck=sorted(quiet))
         fails = cfg.get("pdfFails") or {}
         try:
             if mode == "script":
@@ -415,15 +419,38 @@ def check_mail_now() -> dict:
                         FEE_PDF.mkdir(parents=True, exist_ok=True)
                         write_file(FEE_PDF / f"{fee['id']}.pdf", pdf)
                     save_record("fees", fee)
-                    notify_fee(fee)
+                    if not quiet and not cfg.get("recheck"):
+                        notify_fee(fee)   # lần đọc lại sau khi dọn (v1.9.4): không báo lại phí cũ
                 seen.add(fee["id"])
             mark_replaced()
+            cfg.pop("recheck", None)
             cfg.update(lastCheck=int(time.time() * 1000), lastError=None, lastFound=len(new), seen=sorted(seen)[-500:])
         except Exception as e:  # noqa: BLE001
             msg = mail_error(e)
             cfg.update(lastCheck=int(time.time() * 1000), lastError=msg[:200])
         write_json(MAIL_CFG, cfg)
         return mail_public(cfg)
+
+
+def cleanup_wrong_parking(seen: set) -> set:
+    """v1.9.4: xoá các khoản "phí gửi xe" có thể bị đọc nhầm, để lần đọc Gmail kế tiếp đọc lại bằng luật mới.
+    - Chưa trả + tiêu đề không có chữ gửi xe / vé xe: xoá; nếu đúng là phí gửi xe sẽ được tạo lại y như cũ (cùng mã).
+    - Đã trả: chỉ xoá khi tiêu đề / người gửi rõ là phí quản lý, dịch vụ, Sun Ponte… (chắc chắn nhầm)."""
+    removed = set()
+    for f in all_fees():
+        if f.get("kind") not in (None, "", "parking"):
+            continue
+        subj, sender = f.get("subject") or "", f.get("sender") or ""
+        if feemail.PARKING_SUBJECT.search(subj):
+            continue
+        wrong = feemail.NOT_PARKING.search(f"{subj} {sender}")
+        if f.get("paidAt") and not wrong:
+            continue
+        q("DELETE FROM records WHERE store='fees' AND id=?", (f["id"],))
+        seen.discard(f["id"])
+        removed.add(f["id"])
+        print("v1.9.4 xoá phí gửi xe đọc nhầm:", f["id"], subj[:80])
+    return removed
 
 
 def all_fees() -> list:
